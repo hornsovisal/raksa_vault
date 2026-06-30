@@ -91,6 +91,7 @@ The project follows a layered architecture that separates data, models, and UI.
 ## 🤝 Contribution
 
 **Prepared By:** Horn Sovisal; Kue ChanChessika
+
 **Course:** Mobile Development in Cybersecurity
 
 **Course Info:** This course covers building mobile applications with Flutter, focusing on how data flows through an app — UI, network, local storage, and device features — and where security issues can arise.
