@@ -1,92 +1,142 @@
-# Raksa Vault (រក្សា Vault): Secure Mobile Vault & Intrusion Detection
+# Raksa Vault (រក្សា Vault): Secure Mobile Vault for Sensitive Data
 
-**Raksa Vault** is a Blue Team defensive mobile security application built with **Flutter**. It protects a user's sensitive data — passwords, private notes, and documents — behind login, PIN, and biometric authentication. Beyond simply locking data away, it actively *detects* intrusions: after repeated failed unlock attempts, it silently captures an intruder photo, records the time and location, and preserves the evidence both on the device and in the cloud. The app is designed as an educational project demonstrating core mobile development concepts (state, navigation, local storage, REST/Firebase, and device features) through a real cybersecurity use case.
+**Raksa Vault** is a Blue Team defensive mobile security application built with **Flutter**. The application focuses on protecting sensitive personal information through secure authentication and local storage. Users can unlock the app using email/password authentication, PIN, and biometric authentication. After successful authentication, users can safely store and manage sensitive text-based data such as passwords, bank account numbers, credit/debit card details, recovery codes, private notes, Wi-Fi passwords, software license keys, emergency contacts, and identity document details.
+
+The application is designed as an educational mobile development project that demonstrates important Flutter concepts such as state management, navigation, forms, local database storage, authentication flow, and secure handling of sensitive user data.
 
 ## ✨ Key Features
 
-- **Secure Authentication:** Email/password login, a 4-digit PIN, and biometric (fingerprint / face).
-- **Encrypted Vault:** Stores notes, passwords, and files locally in an encrypted SQLite database (`drift`). Sensitive tokens and the PIN are kept in `flutter_secure_storage`.
-- **Intrusion Detection:** After a configurable number of failed unlock attempts, the front camera silently captures an "intruder selfie."
-- **Forensic Logging:** Each unauthorized attempt is recorded with a photo, timestamp, and GPS location in a tamper-evident Break-In Log.
-- **Offline-First with Cloud Sync:** Works fully offline; when connected, data backs up to **Firebase** so evidence survives even if the device is wiped.
-- **Layered Architecture:** Built with a clean `models / data / ui` separation for easy testing and future expansion.
+* **Secure Authentication:** Users can log in using email/password and unlock the vault using a PIN or biometric authentication such as fingerprint or face unlock.
+* **SQLite Local Storage:** Sensitive vault items are stored locally on the device using SQLite.
+* **Sensitive Data Management:** Users can create, view, update, delete, and search sensitive records.
+* **Category-Based Vault:** Stored data is organized into categories such as passwords, bank accounts, credit cards, recovery codes, private notes, Wi-Fi passwords, software licenses, emergency contacts, and identity document numbers.
+* **Secure PIN Storage:** The user’s PIN is stored securely using `flutter_secure_storage`.
+* **Layered Architecture:** The project follows a clean `models / data / ui` structure for better organization and maintainability.
+
+## 🔐 Data Stored in the Vault
+
+Raksa Vault focuses only on **text-based sensitive data**. It does not store document images or files.
+
+Examples of stored data include:
+
+* Passwords
+* Bank account numbers
+* Credit/debit card information
+* Recovery codes
+* Private notes
+* Wi-Fi passwords
+* Software license keys
+* Emergency contacts
+* Identity document details, such as ID number or passport number only
 
 ## ⚙️ Project Setup
 
 ### Prerequisites
 
-- **Flutter SDK** (3.x or higher recommended) and the **Dart SDK**
-- **Android Studio** (for the Android emulator) and/or **VS Code** with the Flutter & Dart extensions
-- An Android device or emulator (camera, GPS, and biometric features are best tested on a real device)
-- A **Firebase project** (required for cloud sync and authentication)
+* Flutter SDK and Dart SDK
+* Android Studio or VS Code
+* Android emulator or physical Android device
+* SQLite package for local database storage
+* `flutter_secure_storage` for storing sensitive authentication values
+* `local_auth` for biometric authentication
 
 ### Installation
 
-1. **Clone the repository:**
+1. Clone the repository:
 
-   ```bash
-   git clone https://github.com/hornsovisal/raksa_vault.git
-   cd raksa_vault
-   ```
+```bash
+git clone https://github.com/hornsovisal/raksa_vault.git
+cd raksa_vault
+```
 
-2. **Install dependencies:** All required packages are listed in `pubspec.yaml`.
+2. Install dependencies:
 
-   ```bash
-   flutter pub get
-   ```
+```bash
+flutter pub get
+```
 
-3. **Configure Firebase:** Connect the app to your own Firebase project using the FlutterFire CLI (follow the current official FlutterFire docs for exact steps):
+3. Verify the setup:
 
-   ```bash
-   flutterfire configure
-   ```
+```bash
+flutter doctor
+```
 
-   > This generates `lib/firebase_options.dart` and platform config files. These contain your project keys — they are listed in `.gitignore` and must **never** be committed.
+4. Run the app:
 
-4. **Verify the setup:**
-
-   ```bash
-   flutter doctor
-   ```
-
-5. **Run the app:**
-
-   ```bash
-   flutter run
-   ```
+```bash
+flutter run
+```
 
 ## 🧩 Basic Usage
 
-Once launched, the app opens on the **Unlock screen**. After authenticating, you reach the main vault with bottom navigation:
+Once launched, the app opens on the **Authentication screen**. After the user logs in or unlocks the app, they are redirected to the main vault screen.
 
 ### 🔐 1. Login / Unlock
-Sign in with email and password, or unlock an existing session with your PIN or biometrics. Repeated wrong PIN entries silently trigger intrusion capture.
+
+The user authenticates using email/password, PIN, or biometric authentication. This protects the vault from unauthorized access.
 
 ### 🗄️ 2. Vault Dashboard
-Browse, search, and manage your stored items (passwords, notes, documents). Each item shows its category, last update, and sync status.
+
+The user can view all stored sensitive items. Each item displays its title, category, and last updated date.
 
 ### ➕ 3. Add / Edit Item
-A form to create or update a vault entry — title, category, secret content, and an optional "sync to cloud" toggle.
 
-### 🚨 4. Break-In Log
-Review every unauthorized access attempt, each with the captured intruder photo, date/time, GPS coordinates, and number of failed attempts.
+The user can create or update a sensitive record by entering a title, category, and secret content.
+
+### 🔎 4. Search and Filter
+
+The user can search for stored records and filter them by category.
 
 ### ⚙️ 5. Settings
-Configure the failed-attempt threshold and toggle camera and GPS capture on or off.
+
+The user can change PIN settings and enable or disable biometric authentication.
 
 ## 🧱 Project Structure
 
-The project follows a layered architecture that separates data, models, and UI.
+| Directory / File         | Purpose                      | Key Files / Notes                                       |
+| ------------------------ | ---------------------------- | ------------------------------------------------------- |
+| `lib/models/`            | Data models                  | `user.dart`, `vault_item.dart`, `app_settings.dart`     |
+| `lib/data/database/`     | SQLite database              | database helper, vault item table                       |
+| `lib/data/repositories/` | Data access logic            | `auth_repository.dart`, `vault_repository.dart`         |
+| `lib/data/services/`     | Security and device services | PIN storage, biometric service                          |
+| `lib/ui/screens/`        | App screens                  | login, unlock, vault dashboard, add/edit item, settings |
+| `lib/ui/widgets/`        | Reusable widgets             | `vault_tile.dart`, `pin_pad.dart`, `category_chip.dart` |
+| `lib/main.dart`          | App entry point              | starts the app                                          |
+| `pubspec.yaml`           | Dependencies                 | Flutter packages                                        |
 
-| Directory / File | Purpose | Key Files / Notes |
-| --- | --- | --- |
-| 📁 `lib/models/` | **Data models** — plain Dart classes | `user.dart`, `vault_item.dart`, `intruder_log.dart`, `app_settings.dart` |
-| 📁 `lib/data/repositories/` | **Repositories** — coordinate data sources | `auth_repository.dart`, `local_vault_repository.dart`, `cloud_sync_repository.dart` |
-| 📁 `lib/data/services/` | **Services** — device & backend access | database, Firebase, biometric, camera, location services |
-| 📁 `lib/ui/screens/` | **Screens** — full pages | login, vault, add item, break-in log, settings |
-| 📁 `lib/ui/widget/` | **Reusable widgets** | `vault_tile.dart`, `intruder_card.dart`, `pin_pad.dart` |
-| 📄 `lib/main.dart` | **Entry point** — app bootstrap & routing | starts the app |
-| 📄 `pubspec.yaml` | **Dependencies** | list of all Flutter/Dart packages |
+## 🗃️ SQLite Database Design
+
+The application uses SQLite to store vault items locally on the device.
+
+### Table: `vault_items`
+
+| Field          | Type                | Description                                  |
+| -------------- | ------------------- | -------------------------------------------- |
+| `id`           | INTEGER PRIMARY KEY | Unique ID of the vault item                  |
+| `title`        | TEXT                | Name of the stored item                      |
+| `category`     | TEXT                | Type of sensitive data                       |
+| `secret_value` | TEXT                | Sensitive content                            |
+| `description`  | TEXT                | Optional note or description                 |
+| `created_at`   | TEXT                | Date and time when the item was created      |
+| `updated_at`   | TEXT                | Date and time when the item was last updated |
+
+### Example Categories
+
+```txt
+password
+bank_account
+credit_card
+recovery_code
+private_note
+wifi_password
+software_license
+emergency_contact
+identity_document
+```
+
+## 🔒 Security Note
+
+Raksa Vault is designed to store sensitive text-based data locally. The user’s PIN should not be stored as plain text. It should be stored securely using `flutter_secure_storage`, preferably as a hashed value. Sensitive vault data should also be protected carefully, and the app should require authentication before showing any stored records.
 
 ## 🤝 Contribution
 
@@ -94,12 +144,12 @@ The project follows a layered architecture that separates data, models, and UI.
 
 **Course:** Mobile Development in Cybersecurity
 
-**Course Info:** This course covers building mobile applications with Flutter, focusing on how data flows through an app — UI, network, local storage, and device features — and where security issues can arise.
+**Course Info:** This course covers building mobile applications with Flutter, focusing on authentication, local storage, UI navigation, data flow, and secure handling of sensitive information.
 
-**Lecturer:** Mr. Ronan. Ogor
+**Lecturer:** Mr. Ronan Ogor
 
 **Department:** Telecom and Networking, Cyber Security, Cambodia Academy of Digital Technology (CADT)
 
 ## 📝 License
 
-This project is open source and available under the [MIT License](LICENSE).
+This project is open source and available under the MIT License.
