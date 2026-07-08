@@ -430,14 +430,14 @@ The following features may be added in future versions:
 
 ## Contributors
 
-**Prepared By:**
-
-* Horn Sovisal
-* Kue ChanChessika
+**Prepared By:** Horn Sovisal; Kue ChanChessika
 
 **Course:** Mobile Development in Cybersecurity
+
 **Lecturer:** Mr. Ronan Ogor
+
 **Department:** Telecom and Networking, Cyber Security
+
 **Institution:** Cambodia Academy of Digital Technology (CADT)
 
 ---
