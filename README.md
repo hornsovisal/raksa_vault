@@ -76,36 +76,6 @@ Examples of stored data include:
 
 ---
 
-## Project Scope
-
-### Included in Main Implementation
-
-- Firebase email/password register and login
-- Biometric unlock using fingerprint or face authentication
-- PIN fallback unlock
-- Local SQLite/Drift database
-- Add, view, edit, delete vault records
-- Search and category filter
-- Settings screen
-- Theme color system
-- Layered Flutter architecture
-
-### Not Included in Main Implementation
-
-The following features are not included to keep the project realistic and focused:
-
-- GPS location
-- Camera
-- Intruder selfie
-- Document upload
-- Firebase cloud database sync
-- Corporate SSO
-- Multi-device cloud backup
-
-These features may be considered as future improvements.
-
----
-
 ## App Screens
 
 ### 1. Welcome Screen
