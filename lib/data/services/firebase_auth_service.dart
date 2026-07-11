@@ -1,9 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-
-import '../../models/app_user.dart';
-
-import 'package:firebase_auth/firebase_auth.dart';
-
 import '../../models/app_user.dart';
 
 class FirebaseAuthService {
@@ -14,10 +9,7 @@ class FirebaseAuthService {
 
   AppUser? get currentUser {
     final user = _firebaseAuth.currentUser;
-
-    if (user == null) {
-      return null;
-    }
+    if (user == null) return null;
 
     return AppUser(
       uid: user.uid,
@@ -28,9 +20,7 @@ class FirebaseAuthService {
 
   Stream<AppUser?> get authStateChanges {
     return _firebaseAuth.authStateChanges().map((user) {
-      if (user == null) {
-        return null;
-      }
+      if (user == null) return null;
 
       return AppUser(
         uid: user.uid,
@@ -44,21 +34,21 @@ class FirebaseAuthService {
     required String email,
     required String password,
   }) async {
+    final trimmedEmail = email.trim();
     try {
       final credential = await _firebaseAuth.createUserWithEmailAndPassword(
-        email: email.trim(),
+        email: trimmedEmail,
         password: password,
       );
 
       final user = credential.user;
-
       if (user == null) {
         throw Exception('Registration failed. User not found.');
       }
 
       return AppUser(
         uid: user.uid,
-        email: user.email ?? email,
+        email: user.email ?? trimmedEmail,
         createdAt: user.metadata.creationTime ?? DateTime.now(),
       );
     } on FirebaseAuthException catch (e) {
@@ -70,21 +60,21 @@ class FirebaseAuthService {
     required String email,
     required String password,
   }) async {
+    final trimmedEmail = email.trim();
     try {
       final credential = await _firebaseAuth.signInWithEmailAndPassword(
-        email: email.trim(),
+        email: trimmedEmail,
         password: password,
       );
 
       final user = credential.user;
-
       if (user == null) {
         throw Exception('Login failed. User not found.');
       }
 
       return AppUser(
         uid: user.uid,
-        email: user.email ?? email,
+        email: user.email ?? trimmedEmail,
         createdAt: user.metadata.creationTime ?? DateTime.now(),
       );
     } on FirebaseAuthException catch (e) {
@@ -102,10 +92,6 @@ class FirebaseAuthService {
         return 'The email address is not valid.';
       case 'user-disabled':
         return 'This user account has been disabled.';
-      case 'user-not-found':
-        return 'No account found for this email.';
-      case 'wrong-password':
-        return 'Incorrect password.';
       case 'email-already-in-use':
         return 'This email is already registered.';
       case 'weak-password':
@@ -113,6 +99,10 @@ class FirebaseAuthService {
       case 'network-request-failed':
         return 'Network error. Please check your internet connection.';
       case 'invalid-credential':
+        return 'Invalid email or password.';
+      // Kept for older Firebase versions fallback
+      case 'user-not-found':
+      case 'wrong-password':
         return 'Invalid email or password.';
       default:
         return e.message ?? 'Authentication failed. Please try again.';

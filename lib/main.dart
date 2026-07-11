@@ -5,9 +5,12 @@ import 'firebase_options.dart';
 import 'ui/screens/welcome_screen.dart';
 
 void main() async {
-  // WidgetsFlutterBinding.ensureInitialized();
+  // 1. Un-comment this so Flutter can set up native channels before initializing Firebase
+  WidgetsFlutterBinding.ensureInitialized();
 
-  // await Firebase.initializeApp();
+  // 2. Un-comment and pass the currentPlatform options from firebase_options.dart
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(const RaksaVaultApp());
 }
 
@@ -18,7 +21,6 @@ class RaksaVaultApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Raksa Vault',
-      debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.indigo),
       home: const WelcomeScreen(),
     );
