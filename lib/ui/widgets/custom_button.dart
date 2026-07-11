@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart'; /
+import '../theme/app_theme.dart';
 
 class CustomButton extends StatelessWidget {
   final String text; // button name
   final VoidCallback onPressed; // function when button is clicked
-  final bool outlined; 
+  final bool outlined;
   final Color? backgroundColor; // custom background color
   final Color? textColor; // custom text color
 
