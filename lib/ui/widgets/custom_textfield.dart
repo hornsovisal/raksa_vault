@@ -32,7 +32,7 @@ class CustomTextField extends StatelessWidget {
                 color: Color(0xFF1E293B),
               ),
             ),
-            if (trailing != null) trailing,
+            if (trailing != null) trailing!, // Ignoring the linter actually because ?trailing throws "element type Widget? can't be assigned to list type Widget". I will just remove the linter warning by doing nothing or maybe I should use `...[if (trailing != null) trailing!]`.
           ],
         ),
         const SizedBox(height: 8),

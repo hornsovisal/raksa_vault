@@ -1,27 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:responsive_framework/responsive_framework.dart';
-import 'theme/app_theme.dart';
 import 'ui/screens/welcome_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  // WidgetsFlutterBinding.ensureInitialized();
+
+  // await Firebase.initializeApp();
+  runApp(const RaksaVaultApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class RaksaVaultApp extends StatelessWidget {
+  const RaksaVaultApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Raksa Vault',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
+      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.indigo),
       builder: (context, child) {
         return ResponsiveBreakpoints.builder(
           child: Builder(
             builder: (context) {
               return Container(
-                color: AppColors.background,
+                color: Theme.of(context).scaffoldBackgroundColor, // Replaced AppColors.background to use the material 3 theme
                 child: MaxWidthBox(
                   maxWidth: 1200,
                   child: ResponsiveScaledBox(

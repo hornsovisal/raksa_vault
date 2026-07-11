@@ -40,7 +40,7 @@ dependencies:
   path_provider: ^2.1.5
   path: ^1.9.0
   responsive_framework: ^1.5.1
-
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -65,8 +65,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-
   assets:
+    - assets/images/
     - assets/image_2026-06-30_14-08-59.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
