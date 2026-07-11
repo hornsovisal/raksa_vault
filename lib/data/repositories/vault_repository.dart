@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 
 import '../database/app_database.dart';
 
+//this is to do operation on valut, valut will talkwith db
 class VaultRepository {
   final AppDatabase database;
 
@@ -23,10 +24,10 @@ class VaultRepository {
     required String description,
     required bool isFavorite,
   }) {
-    //take now as the create at 
+    //take now as the create at
     final now = DateTime.now();
 
-    //compare it 
+    //compare it
     final item = VaultItemsCompanion(
       userId: Value(userId),
       title: Value(title),
@@ -51,7 +52,6 @@ class VaultRepository {
     required String description,
     required bool isFavorite,
   }) {
-
     //update it , copy with will change only update paramaneter
     final updatedItem = oldItem.copyWith(
       title: title,
