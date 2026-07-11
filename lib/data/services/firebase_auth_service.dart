@@ -2,15 +2,22 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/app_user.dart';
 
 class FirebaseAuthService {
+  //firebase auth is in service which auto create by firebase console
   final FirebaseAuth _firebaseAuth;
 
   FirebaseAuthService({FirebaseAuth? firebaseAuth})
     : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
 
+  //to seethe current user login  now
   AppUser? get currentUser {
     final user = _firebaseAuth.currentUser;
     if (user == null) return null;
 
+    return _convertUser(user);
+  }
+
+  //covert from firebase to our object app user
+  AppUser _convertUser(User user) {
     return AppUser(
       uid: user.uid,
       email: user.email ?? '',
@@ -18,26 +25,23 @@ class FirebaseAuthService {
     );
   }
 
+  //to see for auth state changes (login or logout).
   Stream<AppUser?> get authStateChanges {
     return _firebaseAuth.authStateChanges().map((user) {
       if (user == null) return null;
 
-      return AppUser(
-        uid: user.uid,
-        email: user.email ?? '',
-        createdAt: user.metadata.creationTime ?? DateTime.now(),
-      );
+      return _convertUser(user);
     });
   }
 
+  //function to register user with email and password
   Future<AppUser> register({
     required String email,
     required String password,
   }) async {
-    final trimmedEmail = email.trim();
     try {
       final credential = await _firebaseAuth.createUserWithEmailAndPassword(
-        email: trimmedEmail,
+        email: email,
         password: password,
       );
 
@@ -46,24 +50,22 @@ class FirebaseAuthService {
         throw Exception('Registration failed. User not found.');
       }
 
-      return AppUser(
-        uid: user.uid,
-        email: user.email ?? trimmedEmail,
-        createdAt: user.metadata.creationTime ?? DateTime.now(),
-      );
+      //after success create convert it to our object
+      return _convertUser(user);
     } on FirebaseAuthException catch (e) {
       throw Exception(_getErrorMessage(e));
     }
   }
 
+  //function to login user with firebase
   Future<AppUser> login({
     required String email,
     required String password,
   }) async {
-    final trimmedEmail = email.trim();
     try {
+      //login with firebase auth
       final credential = await _firebaseAuth.signInWithEmailAndPassword(
-        email: trimmedEmail,
+        email: email,
         password: password,
       );
 
@@ -72,11 +74,8 @@ class FirebaseAuthService {
         throw Exception('Login failed. User not found.');
       }
 
-      return AppUser(
-        uid: user.uid,
-        email: user.email ?? trimmedEmail,
-        createdAt: user.metadata.creationTime ?? DateTime.now(),
-      );
+      //after success create convert it to our object
+      return _convertUser(user);
     } on FirebaseAuthException catch (e) {
       throw Exception(_getErrorMessage(e));
     }
@@ -86,6 +85,7 @@ class FirebaseAuthService {
     await _firebaseAuth.signOut();
   }
 
+  //any error message customized
   String _getErrorMessage(FirebaseAuthException e) {
     switch (e.code) {
       case 'invalid-email':
