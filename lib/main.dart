@@ -27,7 +27,7 @@ class RaksaVaultApp extends StatelessWidget {
                 child: MaxWidthBox(
                   maxWidth: 1200,
                   child: ResponsiveScaledBox(
-                    width: ResponsiveValue<double>(context, conditionalValues: [
+                    width: ResponsiveValue<double?>(context, defaultValue: null, conditionalValues: [
                       Condition.equals(name: MOBILE, value: 450),
                       Condition.between(start: 800, end: 1100, value: 800),
                       Condition.between(start: 1100, end: 9999, value: 1000),
