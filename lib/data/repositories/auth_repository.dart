@@ -11,6 +11,9 @@ class AuthRepository {
   // Get the current logged-in user
   AppUser? get currentUser => _authService.currentUser;
 
+  //check is login or not
+  bool get isLoggedIn => currentUser != null;
+
   // to see to login/logout changes
   Stream<AppUser?> get authStateChanges => _authService.authStateChanges;
 
