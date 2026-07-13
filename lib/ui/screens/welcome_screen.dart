@@ -1,24 +1,44 @@
 import 'package:flutter/material.dart';
+
 import '../theme/app_theme.dart';
+import '../widgets/custom_button.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
+  void _goToRegister(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const RegisterScreen()),
+    );
+  }
+
+  void _goToLogin(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Top Logo Row
+              // Logo
               Row(
                 children: [
-                  const Icon(Icons.shield_outlined, color: AppColors.primary, size: 28),
+                  const Icon(
+                    Icons.shield_outlined,
+                    color: AppColors.primary,
+                    size: 28,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Raksa Vault',
@@ -26,9 +46,12 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ],
               ),
+
               const SizedBox(height: 32),
-              // Image Card
+
+              // Illustration Card
               Container(
+                padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
                   color: AppColors.card,
                   borderRadius: BorderRadius.circular(16),
@@ -40,68 +63,49 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.all(32),
                 child: Image.asset(
                   'assets/image_2026-06-30_14-08-59.png',
                   height: 180,
                   fit: BoxFit.contain,
                 ),
               ),
+
               const SizedBox(height: 48),
-              // Welcome Text
+
+              // Title
               Text(
                 'Welcome to Raksa Vault',
-                style: AppTextStyles.headline.copyWith(fontSize: 24),
                 textAlign: TextAlign.center,
+                style: AppTextStyles.headline.copyWith(fontSize: 24),
               ),
+
               const SizedBox(height: 16),
+
               const Text(
                 'Secure your sensitive information with local encryption, biometric authentication, and offline storage.',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
                   color: AppColors.textBody,
                   height: 1.5,
                 ),
-                textAlign: TextAlign.center,
               ),
+
               const SizedBox(height: 48),
-              // Buttons
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const RegisterScreen()),
-                  );
-                },
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Create Account'),
-                    SizedBox(width: 8),
-                    Icon(Icons.arrow_forward, size: 20),
-                  ],
-                ),
+
+              // Create Account Button
+              CustomButton(
+                text: 'Create Account',
+                onPressed: () => _goToRegister(context),
               ),
+
               const SizedBox(height: 16),
-              OutlinedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
-                  );
-                },
-                child: const Text('Login'),
-              ),
-              const SizedBox(height: 32),
-              // Footer
-              const Center(
-                child: Text(
-                  '© 2026 Raksa Vault',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textMuted,
-                  ),
-                ),
+
+              // Login Button
+              CustomButton(
+                text: 'Login',
+                outlined: true,
+                onPressed: () => _goToLogin(context),
               ),
             ],
           ),

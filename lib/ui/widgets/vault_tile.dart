@@ -5,6 +5,7 @@ class VaultTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final Widget? leadingIcon;
+  final Widget? trailing;
   final VoidCallback onTap;
 
   const VaultTile({
@@ -13,16 +14,15 @@ class VaultTile extends StatelessWidget {
     required this.subtitle,
     required this.onTap,
     this.leadingIcon,
+    this.trailing,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
       elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -33,31 +33,26 @@ class VaultTile extends StatelessWidget {
             color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Center(
-            child: leadingIcon ??
-                const Icon(
-                  Icons.lock,
-                  color: AppColors.primary,
-                ),
-          ),
+          alignment: Alignment.center,
+          child:
+              leadingIcon ??
+              const Icon(Icons.lock_outline, color: AppColors.primary),
         ),
         title: Text(
           title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
+          style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(
-            color: Colors.grey,
-          ),
+          style: const TextStyle(color: AppColors.textMuted),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
-        trailing: const Icon(
-          Icons.chevron_right,
-          color: Colors.grey,
-        ),
+        trailing:
+            trailing ??
+            const Icon(Icons.chevron_right, color: AppColors.textMuted),
       ),
     );
   }

@@ -2,69 +2,91 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
 class CustomButton extends StatelessWidget {
-  final String text; // button name
-  final VoidCallback onPressed; // function when button is clicked
+  final String text;
+  final VoidCallback onPressed;
   final bool outlined;
-  final Color? backgroundColor; // custom background color
-  final Color? textColor; // custom text color
+  final bool isLoading;
+  final Color? backgroundColor;
+  final Color? textColor;
 
   const CustomButton({
     super.key,
     required this.text,
     required this.onPressed,
     this.outlined = false,
+    this.isLoading = false,
     this.backgroundColor,
     this.textColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    // if outlined is true, show outline button
+    // Outlined Button
     if (outlined) {
       return SizedBox(
-        width: double.infinity, // make button full width
-        height: 48, // button height
+        width: double.infinity,
+        height: 48,
         child: OutlinedButton(
-          onPressed: onPressed, // run function
+          onPressed: isLoading ? null : onPressed,
           style: OutlinedButton.styleFrom(
             foregroundColor: textColor ?? AppColors.primary,
-            side: const BorderSide(
-              color: AppColors.border, // button border color
-            ),
+            side: const BorderSide(color: AppColors.border),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12), // round corner
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
-          child: Text(
-            text,
-            style: AppTextStyles.button.copyWith(
-              color: textColor ?? AppColors.primary,
-            ),
-          ),
+          child: isLoading
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator.adaptive(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      textColor ?? AppColors.primary,
+                    ),
+                  ),
+                )
+              : Text(
+                  text,
+                  style: AppTextStyles.button.copyWith(
+                    color: textColor ?? AppColors.primary,
+                  ),
+                ),
         ),
       );
     }
 
-    // if outlined is false, show normal button
+    // Filled Button
     return SizedBox(
-      width: double.infinity, // full width button
-      height: 48, // button height
+      width: double.infinity,
+      height: 48,
       child: ElevatedButton(
-        onPressed: onPressed, // button click action
+        onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor ?? AppColors.primary,
           foregroundColor: textColor ?? Colors.white,
-          elevation: 0, // remove shadow
+          elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12), // make corner round
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: Text(
-          text,
-          style: AppTextStyles.button.copyWith(
-            color: textColor ?? Colors.white,
-          ),
-        ),
+        child: isLoading
+            ? SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator.adaptive(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    textColor ?? Colors.white,
+                  ),
+                ),
+              )
+            : Text(
+                text,
+                style: AppTextStyles.button.copyWith(
+                  color: textColor ?? Colors.white,
+                ),
+              ),
       ),
     );
   }
