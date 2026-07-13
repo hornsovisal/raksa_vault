@@ -1,5 +1,5 @@
-// import '../../models/app_user.dart';
-// import '../services/firebase_auth_service.dart';
+import '../../models/app_user.dart';
+import '../services/firebase_auth_service.dart';
 
 /// The Authentication Repository manages user session operations.
 class AuthRepository {
