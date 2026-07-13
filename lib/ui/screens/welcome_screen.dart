@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
+import '../widgets/custom_button.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -66,31 +67,26 @@ class WelcomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 48),
               // Buttons
-              ElevatedButton(
+              CustomButton(
+                text: 'Create Account',
+                icon: Icons.arrow_forward,
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const RegisterScreen()),
                   );
                 },
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Create Account'),
-                    SizedBox(width: 8),
-                    Icon(Icons.arrow_forward, size: 20),
-                  ],
-                ),
               ),
               const SizedBox(height: 16),
-              OutlinedButton(
+              CustomButton(
+                text: 'Login',
+                isOutlined: true,
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const LoginScreen()),
                   );
                 },
-                child: const Text('Login'),
               ),
               const SizedBox(height: 32),
               // Footer

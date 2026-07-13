@@ -4,6 +4,7 @@ import '../theme/app_theme.dart';
 import '../widgets/custom_textfield.dart';
 import 'register_screen.dart';
 import 'vault_dashboard_screen.dart';
+import '../widgets/custom_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -113,38 +114,35 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    _isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1E3A8A),
-                              foregroundColor: Colors.white,
-                              disabledBackgroundColor: Colors.grey.shade300,
-                              disabledForegroundColor: Colors.grey.shade500,
-                            ),
-                            onPressed: (_emailController.text.trim().isEmpty || _passwordController.text.isEmpty)
-                                ? null
-                                : () async {
+                    CustomButton(
+                      text: 'Login',
+                      isLoading: _isLoading,
+                      onPressed: (_emailController.text.trim().isEmpty || _passwordController.text.isEmpty)
+                          ? null
+                          : () async {
                               setState(() {
                                 _isLoading = true;
                               });
                               try {
+                                // Attempt to sign in the user with Firebase Authentication.
                                 await FirebaseAuth.instance.signInWithEmailAndPassword(
                                   email: _emailController.text.trim(),
                                   password: _passwordController.text,
                                 );
-                                if (mounted) {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => const VaultDashboardScreen()),
-                                  );
-                                }
+                                
+                                // IMPORTANT: After an 'await', the user might have closed the screen before the async task finished.
+                                // We check 'context.mounted' to ensure the screen is still visible before navigating to avoid crashes.
+                                if (!context.mounted) return;
+                                
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const VaultDashboardScreen()),
+                                );
                               } on FirebaseAuthException catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(e.message ?? 'An error occurred')),
-                                  );
-                                }
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(e.message ?? 'An error occurred')),
+                                );
                               } finally {
                                 if (mounted) {
                                   setState(() {
@@ -153,8 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 }
                               }
                             },
-                            child: const Text('Login'),
-                          ),
+                    ),
                   ],
                 ),
               ),

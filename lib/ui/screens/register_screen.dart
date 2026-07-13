@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_textfield.dart';
 import 'vault_dashboard_screen.dart';
+import '../widgets/custom_button.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -114,51 +115,51 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1E3A8A),
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: () async {
-                        if (_passwordController.text != _confirmPasswordController.text) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Passwords don't match")),
-                          );
-                          return;
-                        }
-                        setState(() {
-                          _isLoading = true;
-                        });
-                        try {
-                          final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-                            email: _emailController.text.trim(),
-                            password: _passwordController.text,
-                          );
-                          await userCredential.user?.updateDisplayName(_fullNameController.text.trim());
-                          if (mounted) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (context) => const VaultDashboardScreen()),
-                            );
-                          }
-                        } on FirebaseAuthException catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(e.message ?? 'An error occurred')),
-                            );
-                          }
-                        } finally {
-                          if (mounted) {
-                            setState(() {
-                              _isLoading = false;
-                            });
-                          }
-                        }
-                      },
-                      child: const Text('Create Account'),
-                    ),
+              CustomButton(
+                text: 'Create Account',
+                isLoading: _isLoading,
+                onPressed: () async {
+                  if (_passwordController.text != _confirmPasswordController.text) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Passwords don't match")),
+                    );
+                    return;
+                  }
+                  setState(() {
+                    _isLoading = true;
+                  });
+                  try {
+                    // Create a new user account in Firebase.
+                    final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                      email: _emailController.text.trim(),
+                      password: _passwordController.text,
+                    );
+                    
+                    // Update the user's display name.
+                    await userCredential.user?.updateDisplayName(_fullNameController.text.trim());
+                    
+                    // IMPORTANT: After an 'await', the user might have closed the screen before the async task finished.
+                    // We check 'context.mounted' to ensure the screen is still visible before navigating to avoid crashes.
+                    if (!context.mounted) return;
+                    
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const VaultDashboardScreen()),
+                    );
+                  } on FirebaseAuthException catch (e) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(e.message ?? 'An error occurred')),
+                    );
+                  } finally {
+                    if (mounted) {
+                      setState(() {
+                        _isLoading = false;
+                      });
+                    }
+                  }
+                },
+              ),
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
