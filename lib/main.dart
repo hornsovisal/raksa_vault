@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:responsive_framework/responsive_framework.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'ui/screens/welcome_screen.dart';
 
 void main() async {
-  // WidgetsFlutterBinding.ensureInitialized();
+  // 1. Un-comment this so Flutter can set up native channels before initializing Firebase
+  WidgetsFlutterBinding.ensureInitialized();
 
-  // await Firebase.initializeApp();
+  // 2. Un-comment and pass the currentPlatform options from firebase_options.dart
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(const RaksaVaultApp());
 }
 
