@@ -22,7 +22,7 @@ final AppDatabase database = AppDatabase();
 
 // One repository instance for the entire app
 final VaultRepository vaultRepository = VaultRepository(database);
-final FirebaseAuthService _authService = FirebaseAuthService();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -40,7 +40,13 @@ class RaksaVaultApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       home: const AuthGate(),
       routes: {
-        '/dashboard': (context) => const VaultDashboardScreen(),
+        '/dashboard': (context) {
+          final currentUser = FirebaseAuth.instance.currentUser;
+          return VaultDashboardScreen(
+            repository: vaultRepository,
+            userId: currentUser?.uid ?? '',
+          );
+        },
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/unlock': (context) => const UnlockScreen(),

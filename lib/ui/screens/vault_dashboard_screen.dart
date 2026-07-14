@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:raksa_vault/ui/screens/add_record_screen.dart';
+import 'package:raksa_vault/ui/screens/record_detail_screen.dart';
 import 'package:raksa_vault/ui/theme/app_theme.dart';
 import 'package:raksa_vault/ui/widgets/CustomButtomNav.dart';
 
@@ -6,7 +8,6 @@ import '../../data/database/app_database.dart';
 import '../../data/repositories/vault_repository.dart';
 import '../../data/services/firebase_auth_service.dart';
 import '../widgets/stat_card.dart';
-import '../widgets/vault_tile.dart';
 
 class VaultDashboardScreen extends StatefulWidget {
   final VaultRepository repository;
@@ -69,25 +70,15 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        automaticallyImplyLeading: false, // ✅ Removes the back button
+        automaticallyImplyLeading: false, // Removes the back button
         title: Row(
           children: [
-            CircleAvatar(
-              backgroundColor: AppColors.primary,
-              child: Text(
-                "Good Morning ${user?.fullName}",
-                style: const TextStyle(
-                  color: Color(0xFF3461FD),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
             const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Good Morning, ${user?.fullName ?? 'User'}", // ✅ Dynamic Greeting
+                  "Good Morning, ${user?.fullName}", // Dynamic Greeting
                   style: const TextStyle(
                     color: AppColors.textDark,
                     fontSize: 16,
@@ -155,7 +146,7 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                //  Stat Cards Row
+                // Stat Cards Row
                 Row(
                   children: [
                     Expanded(
@@ -229,7 +220,21 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
                   ...filteredItems.map(
                     (item) => Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: _buildListItem(item),
+                      child: GestureDetector(
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => RecordDetailScreen(
+                                item: item,
+                                repository: widget.repository,
+                              ),
+                            ),
+                          );
+                          _refresh();
+                        },
+                        child: _buildListItem(item),
+                      ),
                     ),
                   ),
               ],
@@ -241,8 +246,15 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
         backgroundColor: const Color(0xFF0F172A),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         onPressed: () async {
-          // await Navigator.push(context, MaterialPageRoute(builder: (_) => AddVaultScreen()));
-          await _refresh();
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AddRecordScreen(userId: widget.userId),
+            ),
+          );
+          if (result == true) {
+            await _refresh();
+          }
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),

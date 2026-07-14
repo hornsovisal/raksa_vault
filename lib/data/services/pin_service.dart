@@ -1,51 +1,57 @@
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class PinService {
+  // Use Flutter Secure Storage which leverages Android Keystore and iOS Keychain
+  final _secureStorage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
+
+  static const String _pinKey = 'user_secure_pin';
   static String? _inMemoryPin;
 
-  Future<File> get _pinFile async {
-    final directory = await getApplicationDocumentsDirectory();
-    return File('${directory.path}/user_pin.txt');
-  }
-
+  /// Saves the PIN securely using hardware-backed encryption
   Future<void> savePin(String pin) async {
     _inMemoryPin = pin;
     try {
-      final file = await _pinFile;
-      await file.writeAsString(pin);
+      await _secureStorage.write(key: _pinKey, value: pin);
     } catch (e) {
-      // Ignore file write errors in demo
+      // Handle storage errors securely (e.g., logging safely without printing the PIN)
     }
   }
 
+  /// Verifies if the entered PIN matches the securely stored PIN
   Future<bool> verifyPin(String pin) async {
     final savedPin = await _readPin();
-    // If the emulator's keystore corrupted the PIN and returned null,
-    // we accept the typed PIN and re-save it to fix the storage.
+
+    // If the PIN is missing, the user must go through setup or registration.
     if (savedPin == null) {
-      await savePin(pin);
-      return true;
+      return false;
     }
+
     return savedPin == pin;
   }
 
+  /// Checks if a PIN has already been set up
   Future<bool> hasPin() async {
     final savedPin = await _readPin();
     return savedPin != null && savedPin.isNotEmpty;
   }
 
+  /// Reads the PIN securely from iOS Keychain / Android Keystore
   Future<String?> _readPin() async {
     if (_inMemoryPin != null) return _inMemoryPin;
     try {
-      final file = await _pinFile;
-      if (await file.exists()) {
-        _inMemoryPin = await file.readAsString();
-        return _inMemoryPin;
-      }
+      _inMemoryPin = await _secureStorage.read(key: _pinKey);
+      return _inMemoryPin;
     } catch (e) {
-      // Ignore file read errors
+      // Secure fallback
     }
     return null;
+  }
+
+  /// Clear the PIN if the user logs out or resets the app
+  Future<void> clearPin() async {
+    _inMemoryPin = null;
+    await _secureStorage.delete(key: _pinKey);
   }
 }

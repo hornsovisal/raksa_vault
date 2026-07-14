@@ -1,17 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../data/repositories/vault_repository.dart';
+import '../../main.dart'; // ✅ Imported main.dart to access global vaultRepository
 import '../theme/app_theme.dart';
 import '../widgets/custom_button.dart';
 
 class AddRecordScreen extends StatefulWidget {
-  final VaultRepository repository;
   final String userId;
-
-  const AddRecordScreen({
-    super.key,
-    required this.repository,
-    required this.userId,
-  });
+  const AddRecordScreen({super.key, required this.userId});
 
   @override
   State<AddRecordScreen> createState() => _AddRecordScreenState();
@@ -21,7 +15,7 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
   String _selectedCategory = 'Passwords';
   bool _obscureSensitive = true;
 
-  // Controllers to grab the user input
+  // Controllers to capture user input
   final _titleController = TextEditingController();
   final _sensitiveController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -53,8 +47,7 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
       if (_selectedCategory == 'Bank Accounts') dbCategory = 'Identity';
       if (_selectedCategory == 'Cards') dbCategory = 'Card';
 
-      // Insert directly into SQLite database
-      await widget.repository.addItem(
+      await vaultRepository.addItem(
         userId: widget.userId,
         title: title,
         category: dbCategory,
@@ -103,7 +96,7 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.withOpacity(0.2)),
+            border: Border.all(color: Colors.grey),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,7 +108,7 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8F9FE),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                  border: Border.all(color: Colors.grey),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
@@ -140,8 +133,9 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                       );
                     }).toList(),
                     onChanged: (newValue) {
-                      if (newValue != null)
+                      if (newValue != null) {
                         setState(() => _selectedCategory = newValue);
+                      }
                     },
                   ),
                 ),
@@ -256,7 +250,7 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
               CustomButton(
                 text: 'Save Record',
                 backgroundColor: const Color(0xFF0F172A),
-                onPressed: _saveRecord, // ✅ Triggers database save
+                onPressed: _saveRecord,
               ),
               const SizedBox(height: 12),
               CustomButton(

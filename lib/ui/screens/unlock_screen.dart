@@ -19,7 +19,6 @@ class _UnlockScreenState extends State<UnlockScreen> {
   void _handlePinEntered(String pin) async {
     final isValid = await _pinService.verifyPin(pin);
     if (isValid) {
-      if (!mounted) return;
       setState(() {
         _errorMsg = null;
       });
