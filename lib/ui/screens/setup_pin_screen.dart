@@ -3,6 +3,7 @@ import '../../data/services/pin_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pin_pad.dart';
 import '../widgets/custom_button.dart';
+import '../../main.dart';
 
 class SetupPinScreen extends StatefulWidget {
   const SetupPinScreen({super.key});
@@ -29,8 +30,10 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
     setState(() {
       _isLoading = true;
     });
-
+    //Save the pin to Flutter secuer storage
     await _pinService.savePin(_enteredPin);
+    //init the encrypt db with pin
+    initializeEncryptedDatabase(_enteredPin);
     if (!mounted) return;
 
     setState(() {

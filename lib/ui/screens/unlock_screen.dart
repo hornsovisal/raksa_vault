@@ -26,6 +26,7 @@ class _UnlockScreenState extends State<UnlockScreen> {
         _errorMsg = null;
       });
 
+      //init our db with pin , no pin = cannot access
       initializeEncryptedDatabase(pin);
 
       Navigator.pushNamedAndRemoveUntil(
@@ -53,90 +54,85 @@ class _UnlockScreenState extends State<UnlockScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24.0,
-              vertical: 48.0,
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 32),
-                Text(
-                  'Raksa Vault',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.headline.copyWith(
-                    fontSize: 28,
-                    color: const Color(0xFF1E3A8A),
-                  ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 32),
+              Text(
+                'Raksa Vault',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.headline.copyWith(
+                  fontSize: 28,
+                  color: const Color(0xFF1E3A8A),
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Secure your sensitive information',
-                  style: TextStyle(color: AppColors.textBody, fontSize: 14),
-                ),
-                const SizedBox(height: 48),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Secure your sensitive information',
+                style: TextStyle(color: AppColors.textBody, fontSize: 14),
+              ),
+              const SizedBox(height: 48),
 
-                // Avatar Placeholder
-                Container(
-                  width: 96,
-                  height: 96,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFEFF6FF), // very light blue
-                    shape: BoxShape.circle,
-                  ),
+              // Avatar Placeholder
+              Container(
+                width: 96,
+                height: 96,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFEFF6FF), // very light blue
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(height: 32),
+              ),
+              const SizedBox(height: 32),
 
-                CustomButton(
-                  text: 'Unlock with Biometrics',
-                  backgroundColor: const Color(0xFF1E3A8A), // dark blue
-                  onPressed: () {
-                    // Biometrics not fully implemented in this demo
-                  },
+              CustomButton(
+                text: 'Unlock with Biometrics',
+                backgroundColor: const Color(0xFF1E3A8A), // dark blue
+                onPressed: () {
+                  // Biometrics not fully implemented in this demo
+                },
+              ),
+              const SizedBox(height: 12),
+
+              const Text(
+                'Use fingerprint or Face ID',
+                style: TextStyle(
+                  color: AppColors.textBody,
+                  fontSize: 12,
+                  fontFamily: 'monospace',
                 ),
-                const SizedBox(height: 12),
+              ),
+              const SizedBox(height: 32),
 
-                const Text(
-                  'Use fingerprint or Face ID',
-                  style: TextStyle(
-                    color: AppColors.textBody,
-                    fontSize: 12,
-                    fontFamily: 'monospace',
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // OR Divider
-                Row(
-                  children: [
-                    Expanded(child: Divider(color: Colors.grey[300])),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'OR',
-                        style: TextStyle(
-                          color: Colors.grey[400],
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
+              // OR Divider
+              Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.grey[300])),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'OR',
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Expanded(child: Divider(color: Colors.grey[300])),
-                  ],
-                ),
-                const SizedBox(height: 32),
+                  ),
+                  Expanded(child: Divider(color: Colors.grey[300])),
+                ],
+              ),
+              const SizedBox(height: 32),
 
-                PinPad(
-                  pinLength: 6,
-                  onPinEntered: _handlePinEntered,
-                  errorText: _errorMsg,
-                ),
-                const SizedBox(height: 32),
-              ],
-            ),
+              PinPad(
+                pinLength: 6,
+                onPinEntered: _handlePinEntered,
+                errorText: _errorMsg,
+              ),
+              const SizedBox(height: 32),
+            ],
           ),
         ),
       ),
