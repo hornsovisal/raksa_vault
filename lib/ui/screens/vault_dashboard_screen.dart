@@ -20,7 +20,7 @@ class VaultDashboardScreen extends StatefulWidget {
 }
 
 class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
-  late Future<List<VaultItem>> _vaultItemsFuture;
+  late Future<List<VaultItem>> _vaultItems;
   // Return the  icon based on the vault item category.
   IconData _getCategoryIcon(String category) {
     switch (category.toLowerCase()) {
@@ -48,7 +48,7 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
   }
 
   void _loadVaultItems() {
-    _vaultItemsFuture = widget.repository.getAllItems(widget.userId);
+    _vaultItems = widget.repository.getAllItems(widget.userId);
   }
 
   Future<void> _refresh() async {
@@ -66,7 +66,7 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
       ),
       //FutureBuilder is a Flutter widget that waits for a Future to finish and buit the ui new
       body: FutureBuilder<List<VaultItem>>(
-        future: _vaultItemsFuture,
+        future: _vaultItems,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
