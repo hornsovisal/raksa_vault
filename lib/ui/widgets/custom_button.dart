@@ -2,19 +2,23 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
 class CustomButton extends StatelessWidget {
+  // These are the properties our custom button can accept.
+  // Making a reusable widget like this keeps our code clean and our UI consistent across the app.
   final String text;
-  final VoidCallback onPressed;
-  final bool outlined;
-  final bool isLoading;
+  final VoidCallback? onPressed; // Nullable so the button can be disabled
+  final bool outlined; // Switches between an ElevatedButton and OutlinedButton
+  final bool isLoading; // Shows a loading spinner when true
+  final IconData? icon; // Optional icon to display next to the text
   final Color? backgroundColor;
   final Color? textColor;
 
   const CustomButton({
     super.key,
     required this.text,
-    required this.onPressed,
+    this.onPressed,
     this.outlined = false,
     this.isLoading = false,
+    this.icon,
     this.backgroundColor,
     this.textColor,
   });
@@ -35,23 +39,7 @@ class CustomButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          child: isLoading
-              ? SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator.adaptive(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      textColor ?? AppColors.primary,
-                    ),
-                  ),
-                )
-              : Text(
-                  text,
-                  style: AppTextStyles.button.copyWith(
-                    color: textColor ?? AppColors.primary,
-                  ),
-                ),
+          child: _buildChild(textColor ?? AppColors.primary),
         ),
       );
     }
@@ -70,24 +58,40 @@ class CustomButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: isLoading
-            ? SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator.adaptive(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    textColor ?? Colors.white,
-                  ),
-                ),
-              )
-            : Text(
-                text,
-                style: AppTextStyles.button.copyWith(
-                  color: textColor ?? Colors.white,
-                ),
-              ),
+        child: _buildChild(textColor ?? Colors.white),
       ),
+    );
+  }
+
+  Widget _buildChild(Color progressColor) {
+    if (isLoading) {
+      return SizedBox(
+        width: 20,
+        height: 20,
+        child: CircularProgressIndicator.adaptive(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+        ),
+      );
+    }
+
+    if (icon != null) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            text,
+            style: AppTextStyles.button.copyWith(color: progressColor),
+          ),
+          const SizedBox(width: 8),
+          Icon(icon, size: 20, color: progressColor),
+        ],
+      );
+    }
+
+    return Text(
+      text,
+      style: AppTextStyles.button.copyWith(color: progressColor),
     );
   }
 }
