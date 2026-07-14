@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import '../../data/repositories/vault_repository.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_button.dart';
-import 'vault_dashboard_screen.dart';
 
 class AddRecordScreen extends StatefulWidget {
-  const AddRecordScreen({super.key});
+  final VaultRepository repository;
+  final String userId;
+
+  const AddRecordScreen({
+    super.key,
+    required this.repository,
+    required this.userId,
+  });
 
   @override
   State<AddRecordScreen> createState() => _AddRecordScreenState();
@@ -12,12 +19,61 @@ class AddRecordScreen extends StatefulWidget {
 
 class _AddRecordScreenState extends State<AddRecordScreen> {
   String _selectedCategory = 'Passwords';
+  bool _obscureSensitive = true;
+
+  // Controllers to grab the user input
   final _titleController = TextEditingController();
+  final _sensitiveController = TextEditingController();
+  final _descriptionController = TextEditingController();
 
   @override
   void dispose() {
     _titleController.dispose();
+    _sensitiveController.dispose();
+    _descriptionController.dispose();
     super.dispose();
+  }
+
+  // Handles the SQLite Database Insert operation
+  Future<void> _saveRecord() async {
+    final title = _titleController.text.trim();
+    final secretValue = _sensitiveController.text.trim();
+    final description = _descriptionController.text.trim();
+
+    if (title.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a record title')),
+      );
+      return;
+    }
+
+    try {
+      String dbCategory = _selectedCategory;
+      if (_selectedCategory == 'Passwords') dbCategory = 'Login';
+      if (_selectedCategory == 'Bank Accounts') dbCategory = 'Identity';
+      if (_selectedCategory == 'Cards') dbCategory = 'Card';
+
+      // Insert directly into SQLite database
+      await widget.repository.addItem(
+        userId: widget.userId,
+        title: title,
+        category: dbCategory,
+        secretValue: secretValue,
+        description: description,
+        isFavorite: false,
+      );
+
+      // Pop back to the Dashboard returning true so it triggers a refresh
+      if (mounted) {
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save to database: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -31,7 +87,10 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
         ),
         title: Text(
           'Add New Record',
-          style: AppTextStyles.headline.copyWith(fontSize: 18, color: const Color(0xFF1E3A8A)),
+          style: AppTextStyles.headline.copyWith(
+            fontSize: 18,
+            color: const Color(0xFF1E3A8A),
+          ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -44,7 +103,7 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+            border: Border.all(color: Colors.grey.withOpacity(0.2)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,42 +115,77 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8F9FE),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                  border: Border.all(color: Colors.grey.withOpacity(0.3)),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: _selectedCategory,
                     isExpanded: true,
-                    icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF64748B)),
-                    items: ['Passwords', 'Bank Accounts', 'Cards'].map((String value) {
+                    icon: const Icon(
+                      Icons.keyboard_arrow_down,
+                      color: Color(0xFF64748B),
+                    ),
+                    items: ['Passwords', 'Bank Accounts', 'Cards'].map((
+                      String value,
+                    ) {
                       return DropdownMenuItem<String>(
                         value: value,
-                        child: Text(value, style: const TextStyle(fontSize: 14, color: Color(0xFF1E293B))),
+                        child: Text(
+                          value,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
                       );
                     }).toList(),
                     onChanged: (newValue) {
-                      if (newValue != null) setState(() => _selectedCategory = newValue);
+                      if (newValue != null)
+                        setState(() => _selectedCategory = newValue);
                     },
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
               _buildLabel('Record Title'),
               const SizedBox(height: 8),
-              _buildTextField('Enter title (e.g. Netflix Primary)', controller: _titleController),
-              
+              _buildTextField(
+                'Enter title (e.g. Netflix Primary)',
+                controller: _titleController,
+              ),
+
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildLabel('Sensitive Information'),
-                  Row(
-                    children: [
-                      const Icon(Icons.visibility_outlined, size: 14, color: Color(0xFF1E3A8A)),
-                      const SizedBox(width: 4),
-                      const Text('Hide', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
-                    ],
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _obscureSensitive = !_obscureSensitive;
+                      });
+                    },
+                    child: Row(
+                      children: [
+                        Icon(
+                          _obscureSensitive
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          size: 14,
+                          color: const Color(0xFF1E3A8A),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _obscureSensitive ? 'Show' : 'Hide',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E3A8A),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -102,17 +196,27 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8F9FE),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                  border: Border.all(color: Colors.grey.withOpacity(0.3)),
                 ),
                 child: Stack(
                   children: [
-                    const TextField(
-                      maxLines: null,
-                      decoration: InputDecoration.collapsed(
-                        hintText: 'Paste password, key, or\nsensitive text here...',
-                        hintStyle: TextStyle(fontSize: 14, color: Color(0xFF94A3B8), fontFamily: 'monospace'),
+                    TextField(
+                      controller: _sensitiveController,
+                      maxLines: _obscureSensitive ? 1 : null,
+                      obscureText: _obscureSensitive,
+                      decoration: const InputDecoration.collapsed(
+                        hintText:
+                            'Paste password, key, or\nsensitive text here...',
+                        hintStyle: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF94A3B8),
+                          fontFamily: 'monospace',
+                        ),
                       ),
-                      style: TextStyle(fontSize: 14, fontFamily: 'monospace'),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontFamily: 'monospace',
+                      ),
                     ),
                     Positioned(
                       bottom: 0,
@@ -123,13 +227,17 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                           color: const Color(0xFFEFF6FF),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(Icons.content_paste, size: 16, color: Color(0xFF1E3A8A)),
+                        child: const Icon(
+                          Icons.content_paste,
+                          size: 16,
+                          color: Color(0xFF1E3A8A),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 24),
               Row(
                 children: [
@@ -139,20 +247,16 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              _buildTextField('Add any notes here...'),
-              
+              _buildTextField(
+                'Add any notes here...',
+                controller: _descriptionController,
+              ),
+
               const SizedBox(height: 32),
               CustomButton(
                 text: 'Save Record',
                 backgroundColor: const Color(0xFF0F172A),
-                onPressed: () {
-                  final title = _titleController.text.isEmpty ? 'Untitled Record' : _titleController.text;
-                  Navigator.pop(context, VaultRecord(
-                    title: title,
-                    category: _selectedCategory,
-                    subtitle: '••••••••',
-                  ));
-                },
+                onPressed: _saveRecord, // ✅ Triggers database save
               ),
               const SizedBox(height: 12),
               CustomButton(
@@ -179,13 +283,16 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
     );
   }
 
-  Widget _buildTextField(String hint, {TextEditingController? controller}) {
+  Widget _buildTextField(
+    String hint, {
+    required TextEditingController controller,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: const Color(0xFFF8F9FE),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+        border: Border.all(color: Colors.grey.withOpacity(0.3)),
       ),
       child: TextField(
         controller: controller,

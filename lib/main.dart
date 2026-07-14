@@ -22,7 +22,7 @@ final AppDatabase database = AppDatabase();
 
 // One repository instance for the entire app
 final VaultRepository vaultRepository = VaultRepository(database);
-
+final FirebaseAuthService _authService = FirebaseAuthService();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -60,8 +60,16 @@ class RaksaVaultApp extends StatelessWidget {
                       defaultValue: null,
                       conditionalValues: [
                         const Condition.equals(name: MOBILE, value: 450),
-                        const Condition.between(start: 800, end: 1100, value: 800),
-                        const Condition.between(start: 1100, end: 9999, value: 1000),
+                        const Condition.between(
+                          start: 800,
+                          end: 1100,
+                          value: 800,
+                        ),
+                        const Condition.between(
+                          start: 1100,
+                          end: 9999,
+                          value: 1000,
+                        ),
                       ],
                     ).value,
                     child: BouncingScrollWrapper.builder(
@@ -99,7 +107,9 @@ class AuthGate extends StatelessWidget {
             future: PinService().hasPin(),
             builder: (context, pinSnapshot) {
               if (pinSnapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(body: Center(child: CircularProgressIndicator()));
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
               }
               final hasPin = pinSnapshot.data ?? false;
               if (hasPin) {
