@@ -6,6 +6,13 @@ import '../../data/database/app_database.dart';
 import '../theme/app_theme.dart';
 import 'add_record_screen.dart';
 
+class VaultRecord {
+  final String title;
+  final String category;
+  final String subtitle;
+  VaultRecord({required this.title, required this.category, required this.subtitle});
+}
+
 class VaultDashboardScreen extends StatefulWidget {
   const VaultDashboardScreen({super.key});
 
