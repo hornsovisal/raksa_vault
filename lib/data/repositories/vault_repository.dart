@@ -4,7 +4,7 @@ import 'package:drift/drift.dart';
 
 import '../database/app_database.dart';
 
-//this is to do operation on valut, valut will talkwith db
+//this is to do operation on valut, valut will talk with db
 class VaultRepository {
   final AppDatabase database;
 

@@ -47,10 +47,6 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => 1;
 
-  // -------------------------
-  // Vault Item CRUD
-  // -------------------------
-
   Future<List<VaultItem>> getVaultItemsByUser(String userId) {
     return (select(vaultItems)
           ..where((item) => item.userId.equals(userId))

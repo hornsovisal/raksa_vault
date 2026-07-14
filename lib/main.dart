@@ -21,7 +21,6 @@ class RaksaVaultApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Raksa Vault',
-      debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.indigo),
       builder: (context, child) {
         return ResponsiveBreakpoints.builder(
