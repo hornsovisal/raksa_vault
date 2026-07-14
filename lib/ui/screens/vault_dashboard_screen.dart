@@ -47,6 +47,7 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
     _loadVaultItems();
   }
 
+  //load all item by uusing repository
   void _loadVaultItems() {
     _vaultItems = widget.repository.getAllItems(widget.userId);
   }
@@ -68,14 +69,17 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
       body: FutureBuilder<List<VaultItem>>(
         future: _vaultItems,
         builder: (context, snapshot) {
+          //if connection is wating , show circular spin
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
+          //error, show error
           if (snapshot.hasError) {
             return Center(child: Text("Error: ${snapshot.error}"));
           }
 
+          //if it return item
           final items = snapshot.data ?? [];
 
           //find the login category
@@ -101,8 +105,10 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
               .where((e) => e.category.toLowerCase() == "identity")
               .length;
 
+          //return the category
           return RefreshIndicator(
             onRefresh: _refresh,
+            //make it scorelable , can use listview builder as well
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -115,6 +121,7 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
 
                   const SizedBox(height: 16),
 
+                  //show vategoryas grid
                   GridView.count(
                     crossAxisCount: 2,
                     shrinkWrap: true,
@@ -126,7 +133,9 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
                         title: "Logins",
                         icon: Icons.login,
                         count: "$loginCount items",
-                        onTap: () {},
+                        onTap: () {
+                          //should redireict to category of login
+                        },
                       ),
                       CategoryCard(
                         title: "Cards",
@@ -184,7 +193,6 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
                     ListView.builder(
                       itemCount: items.length,
                       shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
                       itemBuilder: (context, index) {
                         final item = items[index];
 
