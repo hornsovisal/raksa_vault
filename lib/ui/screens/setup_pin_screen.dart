@@ -33,15 +33,41 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
 
     await _pinService.savePin(_enteredPin);
     if (!mounted) return;
-
+    
     setState(() {
       _isLoading = false;
     });
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('PIN enabled successfully')));
-
+    
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Icon(Icons.check_circle, color: Colors.green, size: 48),
+        content: const Text(
+          'PIN enabled successfully',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          Center(
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1E3A8A),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Continue', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+        ],
+      ),
+    );
+    
+    if (!mounted) return;
+    
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const VaultDashboardScreen()),
