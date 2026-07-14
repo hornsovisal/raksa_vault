@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:raksa_vault/main.dart';
-
 import '../theme/app_theme.dart';
 import '../widgets/custom_textfield.dart';
-import 'register_screen.dart';
-import 'vault_dashboard_screen.dart';
+
+import '../widgets/custom_button.dart';
+import '../../data/services/firebase_auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,20 +16,13 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-
-    _emailController.addListener(() {
-      setState(() {});
-    });
-
-    _passwordController.addListener(() {
-      setState(() {});
-    });
+    _emailController.addListener(() => setState(() {}));
+    _passwordController.addListener(() => setState(() {}));
   }
 
   @override
@@ -38,48 +30,6 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  Future<void> _login() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      // Firebase login
-      UserCredential credential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-          );
-
-      // Get logged-in user
-      User? user = credential.user;
-
-      if (user != null && mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => VaultDashboardScreen(
-              repository: vaultRepository,
-              userId: user.uid,
-            ),
-          ),
-        );
-      }
-    } on FirebaseAuthException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message ?? "Login failed")));
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
   }
 
   @override
@@ -93,42 +43,34 @@ class _LoginScreenState extends State<LoginScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.shield_outlined,
-              color: AppColors.primary,
-              size: 24,
-            ),
+            Image.asset('assets/images/reaksa-logo.png', width: 24, height: 24),
             const SizedBox(width: 8),
             Text(
-              "Raksa Vault",
+              'Raksa Vault',
               style: AppTextStyles.headline.copyWith(fontSize: 18),
             ),
           ],
         ),
       ),
-
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                "Welcome Back",
+                'Welcome Back',
                 style: AppTextStyles.headline.copyWith(fontSize: 24),
                 textAlign: TextAlign.center,
               ),
-
               const SizedBox(height: 8),
-
               const Text(
-                "Sign in to access your secure vault.",
+                'Sign in to access your secure vault.',
                 style: TextStyle(fontSize: 14, color: AppColors.textBody),
                 textAlign: TextAlign.center,
               ),
-
               const SizedBox(height: 32),
-
+              // White Form Card
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.card,
@@ -141,30 +83,25 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ],
                 ),
-
                 padding: const EdgeInsets.all(24),
-
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     CustomTextField(
                       controller: _emailController,
-                      label: "Email Address",
-                      hint: "name@company.com",
+                      label: 'Email Address',
+                      hint: 'name@company.com',
                     ),
-
                     const SizedBox(height: 16),
-
                     CustomTextField(
                       controller: _passwordController,
-                      label: "Password",
-                      hint: "••••••••",
+                      label: 'Password',
+                      hint: '••••••••',
                       isPassword: true,
-
                       trailing: GestureDetector(
                         onTap: () {},
                         child: const Text(
-                          "Forgot Password?",
+                          'Forgot Password?',
                           style: TextStyle(
                             color: AppColors.primary,
                             fontSize: 12,
@@ -173,31 +110,58 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 24),
+                    CustomButton(
+                      text: 'Login',
+                      isLoading: _isLoading,
+                      onPressed:
+                          (_emailController.text.trim().isEmpty ||
+                              _passwordController.text.isEmpty)
+                          ? null
+                          : () async {
+                              setState(() {
+                                _isLoading = true;
+                              });
+                              try {
+                                // Attempt to sign in the user with Firebase Authentication.
+                                await FirebaseAuth.instance
+                                    .signInWithEmailAndPassword(
+                                      email: _emailController.text.trim(),
+                                      password: _passwordController.text,
+                                    );
 
-                    _isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1E3A8A),
-                              foregroundColor: Colors.white,
-                            ),
+                                // IMPORTANT: After an 'await', the user might have closed the screen before the async task finished.
+                                // We check 'context.mounted' to ensure the screen is still visible before navigating to avoid crashes.
+                                if (!context.mounted) return;
 
-                            onPressed:
-                                (_emailController.text.trim().isEmpty ||
-                                    _passwordController.text.isEmpty)
-                                ? null
-                                : _login,
-
-                            child: const Text("Login"),
-                          ),
+                                Navigator.pushNamed(context, '/unlock');
+                              } on FirebaseAuthException catch (e) {
+                                if (mounted) {
+                                  setState(() {
+                                    _isLoading = false;
+                                  });
+                                }
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      FirebaseAuthService.getErrorMessage(e),
+                                    ),
+                                  ),
+                                );
+                              } finally {
+                                if (mounted) {
+                                  setState(() {
+                                    _isLoading = false;
+                                  });
+                                }
+                              }
+                            },
+                    ),
                   ],
                 ),
               ),
-
               const SizedBox(height: 24),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -205,19 +169,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     "Don't have an account? ",
                     style: TextStyle(color: AppColors.textBody, fontSize: 14),
                   ),
-
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const RegisterScreen(),
-                        ),
-                      );
+                      Navigator.pushReplacementNamed(context, '/register');
                     },
-
                     child: const Text(
-                      "Create Account",
+                      'Create Account',
                       style: TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,
