@@ -78,17 +78,24 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
 
           final items = snapshot.data ?? [];
 
+          //find the login category
           final loginCount = items
               .where((e) => e.category.toLowerCase() == "login")
               .length;
+
+          //find the card category
 
           final cardCount = items
               .where((e) => e.category.toLowerCase() == "card")
               .length;
 
+          //find the note category
+
           final noteCount = items
               .where((e) => e.category.toLowerCase() == "note")
               .length;
+
+          //find the identify category
 
           final identityCount = items
               .where((e) => e.category.toLowerCase() == "identity")
@@ -97,7 +104,6 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
           return RefreshIndicator(
             onRefresh: _refresh,
             child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,7 +118,6 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
                   GridView.count(
                     crossAxisCount: 2,
                     shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
                     childAspectRatio: 1.2,
