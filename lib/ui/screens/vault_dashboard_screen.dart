@@ -62,11 +62,9 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Raksa Vault"),
-        actions: [
-          IconButton(icon: const Icon(Icons.search), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.settings), onPressed: () {}),
-        ],
+        actions: [IconButton(icon: const Icon(Icons.search), onPressed: () {})],
       ),
+      //FutureBuilder is a Flutter widget that waits for a Future to finish and buit the ui new
       body: FutureBuilder<List<VaultItem>>(
         future: _vaultItemsFuture,
         builder: (context, snapshot) {
