@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_textfield.dart';
-import 'vault_dashboard_screen.dart';
+import 'setup_pin_screen.dart';
 import '../widgets/custom_button.dart';
+import '../../data/services/firebase_auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -13,6 +14,15 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  //to check strong password or not
+  bool isStrongPassword(String password) {
+    //need to 8 password ,
+    return password.length >= 8 &&
+        password.contains(RegExp(r'[A-Z]')) &&
+        password.contains(RegExp(r'[a-z]')) &&
+        password.contains(RegExp(r'[0-9]'));
+  }
+
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -39,7 +49,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.shield_outlined, color: AppColors.primary, size: 24),
+            Image.asset('assets/images/reaksa-logo.png', width: 24, height: 24),
             const SizedBox(width: 8),
             Text(
               'Raksa Vault',
@@ -62,10 +72,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 8),
               const Text(
                 'Create your secure vault account.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textBody,
-                ),
+                style: TextStyle(fontSize: 14, color: AppColors.textBody),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
@@ -104,13 +111,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('• At least 8 characters', style: TextStyle(color: AppColors.textBody, fontSize: 12)),
+                    Text(
+                      '• At least 8 characters',
+                      style: TextStyle(color: AppColors.textBody, fontSize: 12),
+                    ),
                     SizedBox(height: 4),
-                    Text('• One uppercase letter', style: TextStyle(color: AppColors.textBody, fontSize: 12)),
+                    Text(
+                      '• One uppercase letter',
+                      style: TextStyle(color: AppColors.textBody, fontSize: 12),
+                    ),
                     SizedBox(height: 4),
-                    Text('• One lowercase letter', style: TextStyle(color: AppColors.textBody, fontSize: 12)),
+                    Text(
+                      '• One lowercase letter',
+                      style: TextStyle(color: AppColors.textBody, fontSize: 12),
+                    ),
                     SizedBox(height: 4),
-                    Text('• One number', style: TextStyle(color: AppColors.textBody, fontSize: 12)),
+                    Text(
+                      '• One number',
+                      style: TextStyle(color: AppColors.textBody, fontSize: 12),
+                    ),
                   ],
                 ),
               ),
@@ -119,7 +138,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 text: 'Create Account',
                 isLoading: _isLoading,
                 onPressed: () async {
-                  if (_passwordController.text != _confirmPasswordController.text) {
+                  if (_passwordController.text !=
+                      _confirmPasswordController.text) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Passwords don't match")),
                     );
@@ -129,27 +149,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     _isLoading = true;
                   });
                   try {
-                    // Create a new user account in Firebase.
-                    final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-                      email: _emailController.text.trim(),
-                      password: _passwordController.text,
+                    final userCredential = await FirebaseAuth.instance
+                        .createUserWithEmailAndPassword(
+                          email: _emailController.text.trim(),
+                          password: _passwordController.text,
+                        );
+
+                    await userCredential.user?.updateDisplayName(
+                      _fullNameController.text.trim(),
                     );
-                    
-                    // Update the user's display name.
-                    await userCredential.user?.updateDisplayName(_fullNameController.text.trim());
-                    
-                    // IMPORTANT: After an 'await', the user might have closed the screen before the async task finished.
-                    // We check 'context.mounted' to ensure the screen is still visible before navigating to avoid crashes.
+
                     if (!context.mounted) return;
-                    
+
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const VaultDashboardScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const SetupPinScreen(),
+                      ),
                     );
                   } on FirebaseAuthException catch (e) {
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(e.message ?? 'An error occurred')),
+                      SnackBar(
+                        content: Text(FirebaseAuthService.getErrorMessage(e)),
+                      ),
                     );
                   } finally {
                     if (mounted) {
@@ -164,7 +187,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('Already have an account? ', style: TextStyle(color: AppColors.textBody, fontSize: 14)),
+                  const Text(
+                    'Already have an account? ',
+                    style: TextStyle(color: AppColors.textBody, fontSize: 14),
+                  ),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: const Text(

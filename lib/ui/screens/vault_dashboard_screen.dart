@@ -11,14 +11,8 @@ class VaultDashboardScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Raksa Vault'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {},
-          ),
+          IconButton(icon: const Icon(Icons.search), onPressed: () {}),
+          IconButton(icon: const Icon(Icons.settings), onPressed: () {}),
         ],
       ),
       body: SingleChildScrollView(
@@ -28,10 +22,7 @@ class VaultDashboardScreen extends StatelessWidget {
           children: [
             const Text(
               'Categories',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             GridView.count(
@@ -74,15 +65,9 @@ class VaultDashboardScreen extends StatelessWidget {
               children: [
                 const Text(
                   'Recent Items',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text('See All'),
-                ),
+                TextButton(onPressed: () {}, child: const Text('See All')),
               ],
             ),
             const SizedBox(height: 8),
@@ -99,10 +84,7 @@ class VaultDashboardScreen extends StatelessWidget {
             VaultTile(
               title: 'Netflix',
               subtitle: 'family@email.com',
-              leadingIcon: const Icon(
-                Icons.movie,
-                color: Colors.red,
-              ),
+              leadingIcon: const Icon(Icons.movie, color: Colors.red),
               onTap: () {},
             ),
             VaultTile(

@@ -7,10 +7,10 @@ import 'ui/theme/app_theme.dart';
 void main() async {
   // Ensure that Flutter bindings are initialized before calling async methods like Firebase initialization.
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Firebase using the platform-specific options.
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  
+
   runApp(const RaksaVaultApp());
 }
 
@@ -29,4 +29,3 @@ class RaksaVaultApp extends StatelessWidget {
     );
   }
 }
-

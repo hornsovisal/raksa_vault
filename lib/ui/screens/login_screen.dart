@@ -3,8 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_textfield.dart';
 import 'register_screen.dart';
-import 'vault_dashboard_screen.dart';
+import 'setup_pin_screen.dart';
+import 'unlock_screen.dart';
+import '../../data/services/pin_service.dart';
 import '../widgets/custom_button.dart';
+import '../../data/services/firebase_auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -43,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.shield_outlined, color: AppColors.primary, size: 24),
+            Image.asset('assets/images/reaksa-logo.png', width: 24, height: 24),
             const SizedBox(width: 8),
             Text(
               'Raksa Vault',
@@ -66,10 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 8),
               const Text(
                 'Sign in to access your secure vault.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textBody,
-                ),
+                style: TextStyle(fontSize: 14, color: AppColors.textBody),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
@@ -117,7 +117,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     CustomButton(
                       text: 'Login',
                       isLoading: _isLoading,
-                      onPressed: (_emailController.text.trim().isEmpty || _passwordController.text.isEmpty)
+                      onPressed:
+                          (_emailController.text.trim().isEmpty ||
+                              _passwordController.text.isEmpty)
                           ? null
                           : () async {
                               setState(() {
@@ -125,23 +127,44 @@ class _LoginScreenState extends State<LoginScreen> {
                               });
                               try {
                                 // Attempt to sign in the user with Firebase Authentication.
-                                await FirebaseAuth.instance.signInWithEmailAndPassword(
-                                  email: _emailController.text.trim(),
-                                  password: _passwordController.text,
-                                );
-                                
+                                await FirebaseAuth.instance
+                                    .signInWithEmailAndPassword(
+                                      email: _emailController.text.trim(),
+                                      password: _passwordController.text,
+                                    );
+
                                 // IMPORTANT: After an 'await', the user might have closed the screen before the async task finished.
                                 // We check 'context.mounted' to ensure the screen is still visible before navigating to avoid crashes.
                                 if (!context.mounted) return;
-                                
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const VaultDashboardScreen()),
-                                );
+
+                                final hasPin = await PinService().hasPin();
+                                if (!context.mounted) return;
+
+                                if (hasPin) {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const UnlockScreen(),
+                                    ),
+                                  );
+                                } else {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const SetupPinScreen(),
+                                    ),
+                                  );
+                                }
                               } on FirebaseAuthException catch (e) {
                                 if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(e.message ?? 'An error occurred')),
+                                  SnackBar(
+                                    content: Text(
+                                      FirebaseAuthService.getErrorMessage(e),
+                                    ),
+                                  ),
                                 );
                               } finally {
                                 if (mounted) {
@@ -159,12 +182,17 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Don't have an account? ", style: TextStyle(color: AppColors.textBody, fontSize: 14)),
+                  const Text(
+                    "Don't have an account? ",
+                    style: TextStyle(color: AppColors.textBody, fontSize: 14),
+                  ),
                   GestureDetector(
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const RegisterScreen(),
+                        ),
                       );
                     },
                     child: const Text(

@@ -48,7 +48,7 @@ class FirebaseAuthService {
 
       return _convertUser(user);
     } on FirebaseAuthException catch (e) {
-      throw Exception(_getErrorMessage(e));
+      throw Exception(getErrorMessage(e));
     }
   }
 
@@ -69,7 +69,7 @@ class FirebaseAuthService {
 
       return _convertUser(user);
     } on FirebaseAuthException catch (e) {
-      throw Exception(_getErrorMessage(e));
+      throw Exception(getErrorMessage(e));
     }
   }
 
@@ -77,7 +77,7 @@ class FirebaseAuthService {
     await _firebaseAuth.signOut();
   }
 
-  String _getErrorMessage(FirebaseAuthException e) {
+  static String getErrorMessage(FirebaseAuthException e) {
     switch (e.code) {
       case 'invalid-email':
         return 'The email address is not valid.';
