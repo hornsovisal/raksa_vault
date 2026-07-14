@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:raksa_vault/data/database/app_database.dart';
+import 'package:raksa_vault/data/repositories/vault_repository.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'firebase_options.dart';
-import 'database/app_database.dart';
-import 'repository/vault_repository.dart';
 import 'ui/screens/welcome_screen.dart';
 
 // One database instance for the entire app
