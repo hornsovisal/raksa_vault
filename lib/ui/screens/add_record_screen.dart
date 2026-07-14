@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../main.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_button.dart';
 import 'vault_dashboard_screen.dart';
@@ -13,10 +15,14 @@ class AddRecordScreen extends StatefulWidget {
 class _AddRecordScreenState extends State<AddRecordScreen> {
   String _selectedCategory = 'Passwords';
   final _titleController = TextEditingController();
+  final _secretValueController = TextEditingController();
+  final _descriptionController = TextEditingController();
 
   @override
   void dispose() {
     _titleController.dispose();
+    _secretValueController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -31,7 +37,10 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
         ),
         title: Text(
           'Add New Record',
-          style: AppTextStyles.headline.copyWith(fontSize: 18, color: const Color(0xFF1E3A8A)),
+          style: AppTextStyles.headline.copyWith(
+            fontSize: 18,
+            color: const Color(0xFF1E3A8A),
+          ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -62,25 +71,41 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                   child: DropdownButton<String>(
                     value: _selectedCategory,
                     isExpanded: true,
-                    icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF64748B)),
-                    items: ['Passwords', 'Bank Accounts', 'Cards'].map((String value) {
+                    icon: const Icon(
+                      Icons.keyboard_arrow_down,
+                      color: Color(0xFF64748B),
+                    ),
+                    items: ['Passwords', 'Bank Accounts', 'Cards'].map((
+                      String value,
+                    ) {
                       return DropdownMenuItem<String>(
                         value: value,
-                        child: Text(value, style: const TextStyle(fontSize: 14, color: Color(0xFF1E293B))),
+                        child: Text(
+                          value,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
                       );
                     }).toList(),
                     onChanged: (newValue) {
-                      if (newValue != null) setState(() => _selectedCategory = newValue);
+                      if (newValue != null) {
+                        setState(() => _selectedCategory = newValue);
+                      }
                     },
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
               _buildLabel('Record Title'),
               const SizedBox(height: 8),
-              _buildTextField('Enter title (e.g. Netflix Primary)', controller: _titleController),
-              
+              _buildTextField(
+                'Enter title (e.g. Netflix Primary)',
+                controller: _titleController,
+              ),
+
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -88,9 +113,20 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                   _buildLabel('Sensitive Information'),
                   Row(
                     children: [
-                      const Icon(Icons.visibility_outlined, size: 14, color: Color(0xFF1E3A8A)),
+                      const Icon(
+                        Icons.visibility_outlined,
+                        size: 14,
+                        color: Color(0xFF1E3A8A),
+                      ),
                       const SizedBox(width: 4),
-                      const Text('Hide', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
+                      const Text(
+                        'Hide',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E3A8A),
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -106,13 +142,22 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                 ),
                 child: Stack(
                   children: [
-                    const TextField(
+                    TextField(
+                      controller: _secretValueController,
                       maxLines: null,
-                      decoration: InputDecoration.collapsed(
-                        hintText: 'Paste password, key, or\nsensitive text here...',
-                        hintStyle: TextStyle(fontSize: 14, color: Color(0xFF94A3B8), fontFamily: 'monospace'),
+                      decoration: const InputDecoration.collapsed(
+                        hintText:
+                            'Paste password, key, or\nsensitive text here...',
+                        hintStyle: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF94A3B8),
+                          fontFamily: 'monospace',
+                        ),
                       ),
-                      style: TextStyle(fontSize: 14, fontFamily: 'monospace'),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontFamily: 'monospace',
+                      ),
                     ),
                     Positioned(
                       bottom: 0,
@@ -123,13 +168,17 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                           color: const Color(0xFFEFF6FF),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(Icons.content_paste, size: 16, color: Color(0xFF1E3A8A)),
+                        child: const Icon(
+                          Icons.content_paste,
+                          size: 16,
+                          color: Color(0xFF1E3A8A),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 24),
               Row(
                 children: [
@@ -139,19 +188,40 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              _buildTextField('Add any notes here...'),
-              
+              _buildTextField(
+                'Add any notes here...',
+                controller: _descriptionController,
+              ),
+
               const SizedBox(height: 32),
               CustomButton(
                 text: 'Save Record',
                 backgroundColor: const Color(0xFF0F172A),
-                onPressed: () {
-                  final title = _titleController.text.isEmpty ? 'Untitled Record' : _titleController.text;
-                  Navigator.pop(context, VaultRecord(
-                    title: title,
-                    category: _selectedCategory,
-                    subtitle: '••••••••',
-                  ));
+                onPressed: () async {
+                  final title = _titleController.text.isEmpty
+                      ? 'Untitled Record'
+                      : _titleController.text;
+                  final user = FirebaseAuth.instance.currentUser;
+                  if (user != null) {
+                    await vaultRepository.addItem(
+                      userId: user.uid,
+                      title: title,
+                      category: _selectedCategory,
+                      secretValue: _secretValueController.text,
+                      description: _descriptionController.text,
+                      isFavorite: false,
+                    );
+                  }
+                  if (mounted) {
+                    Navigator.pop(
+                      context,
+                      VaultRecord(
+                        title: title,
+                        category: _selectedCategory,
+                        subtitle: '••••••••',
+                      ),
+                    );
+                  }
                 },
               ),
               const SizedBox(height: 12),

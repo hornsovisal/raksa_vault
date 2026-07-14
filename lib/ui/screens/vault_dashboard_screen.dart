@@ -10,7 +10,11 @@ class VaultRecord {
   final String title;
   final String category;
   final String subtitle;
-  VaultRecord({required this.title, required this.category, required this.subtitle});
+  VaultRecord({
+    required this.title,
+    required this.category,
+    required this.subtitle,
+  });
 }
 
 class VaultDashboardScreen extends StatefulWidget {
@@ -77,7 +81,10 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
         ),
         title: Text(
           'Vault',
-          style: AppTextStyles.headline.copyWith(fontSize: 20, color: const Color(0xFF1E3A8A)),
+          style: AppTextStyles.headline.copyWith(
+            fontSize: 20,
+            color: const Color(0xFF1E3A8A),
+          ),
         ),
         actions: [
           IconButton(
@@ -113,22 +120,35 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
                   const SizedBox(height: 16),
                   Text(
                     'Good Morning',
-                    style: AppTextStyles.headline.copyWith(fontSize: 24, color: const Color(0xFF1E3A8A)),
+                    style: AppTextStyles.headline.copyWith(
+                      fontSize: 24,
+                      color: const Color(0xFF1E3A8A),
+                    ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Stat Cards Row
                   Row(
                     children: [
-                      Expanded(child: _buildStatCard('Total Records', items.length.toString())),
+                      Expanded(
+                        child: _buildStatCard(
+                          'Total Records',
+                          items.length.toString(),
+                        ),
+                      ),
                       const SizedBox(width: 12),
-                      Expanded(child: _buildStatCard('Categories', categoriesCount.toString())),
+                      Expanded(
+                        child: _buildStatCard(
+                          'Categories',
+                          categoriesCount.toString(),
+                        ),
+                      ),
                       const SizedBox(width: 12),
                       Expanded(child: _buildStatCard('Last Sync', 'Just now')),
                     ],
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Chips Row
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -142,7 +162,7 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // List of items
                   if (items.isEmpty)
                     Center(
@@ -150,16 +170,26 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 48.0),
                         child: Column(
                           children: [
-                            Icon(Icons.folder_open, size: 64, color: Colors.grey[300]),
+                            Icon(
+                              Icons.folder_open,
+                              size: 64,
+                              color: Colors.grey[300],
+                            ),
                             const SizedBox(height: 16),
                             Text(
                               'Your vault is empty.',
-                              style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 16,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               'Click the + button to add a record.',
-                              style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: 14,
+                              ),
                             ),
                           ],
                         ),
@@ -167,7 +197,7 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
                     )
                   else
                     ...items.map((record) => _buildListItem(record)),
-                  
+
                   const SizedBox(height: 80), // padding for FAB
                 ],
               ),
@@ -180,7 +210,7 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         onPressed: () async {
           await Navigator.push(
-            context, 
+            context,
             MaterialPageRoute(builder: (_) => const AddRecordScreen()),
           );
           _refresh();
@@ -203,10 +233,17 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
               margin: const EdgeInsets.only(bottom: 4),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
-                color: _currentIndex == 0 ? const Color(0xFF6EE7B7) : Colors.transparent,
+                color: _currentIndex == 0
+                    ? const Color(0xFF6EE7B7)
+                    : Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(Icons.lock, color: _currentIndex == 0 ? const Color(0xFF059669) : Colors.grey),
+              child: Icon(
+                Icons.lock,
+                color: _currentIndex == 0
+                    ? const Color(0xFF059669)
+                    : Colors.grey,
+              ),
             ),
             label: 'Vault',
           ),
@@ -247,20 +284,20 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title, 
+            title,
             style: const TextStyle(
-              fontSize: 10, 
-              color: Color(0xFF64748B), 
-              fontWeight: FontWeight.bold, 
+              fontSize: 10,
+              color: Color(0xFF64748B),
+              fontWeight: FontWeight.bold,
               fontFamily: 'monospace',
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            value, 
+            value,
             style: const TextStyle(
-              fontSize: 18, 
-              fontWeight: FontWeight.bold, 
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
               color: Color(0xFF1E3A8A),
             ),
           ),
@@ -292,7 +329,7 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
     IconData icon = _getCategoryIcon(record.category);
     Color bgColor;
     Color iconColor;
-    
+
     if (record.category.toLowerCase().contains('bank')) {
       bgColor = const Color(0xFFD1FAE5);
       iconColor = const Color(0xFF059669);
@@ -317,7 +354,7 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: bgColor, 
+              color: bgColor,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: iconColor, size: 20),
@@ -328,19 +365,19 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  record.title, 
+                  record.title,
                   style: const TextStyle(
-                    fontWeight: FontWeight.w600, 
-                    fontSize: 14, 
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
                     color: Color(0xFF1E293B),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  record.description, 
+                  record.description,
                   style: const TextStyle(
-                    fontSize: 12, 
-                    color: Color(0xFF64748B), 
+                    fontSize: 12,
+                    color: Color(0xFF64748B),
                     fontFamily: 'monospace',
                   ),
                 ),

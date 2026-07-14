@@ -20,7 +20,7 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
   void _handlePinEntered(String pin) async {
     final isValid = await PinService().verifyPin(pin);
     if (!mounted) return;
-    
+
     if (isValid) {
       setState(() {
         _isVerified = true;
@@ -44,7 +44,10 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
         ),
         title: Text(
           _isVerified ? widget.record.title : 'Verify PIN',
-          style: AppTextStyles.headline.copyWith(fontSize: 18, color: const Color(0xFF1E3A8A)),
+          style: AppTextStyles.headline.copyWith(
+            fontSize: 18,
+            color: const Color(0xFF1E3A8A),
+          ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -60,7 +63,10 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
         children: [
           const Icon(Icons.lock, size: 48, color: Color(0xFF1E3A8A)),
           const SizedBox(height: 16),
-          const Text('Enter PIN to view details', style: TextStyle(color: AppColors.textBody)),
+          const Text(
+            'Enter PIN to view details',
+            style: TextStyle(color: AppColors.textBody),
+          ),
           const SizedBox(height: 32),
           PinPad(
             pinLength: 6,
@@ -95,7 +101,11 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF64748B)),
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF64748B),
+          ),
         ),
         const SizedBox(height: 8),
         Container(

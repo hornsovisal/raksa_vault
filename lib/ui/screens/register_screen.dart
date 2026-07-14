@@ -149,7 +149,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         if (_passwordController.text !=
                             _confirmPasswordController.text) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Passwords don't match")),
+                            const SnackBar(
+                              content: Text("Passwords don't match"),
+                            ),
                           );
                           return;
                         }
@@ -174,7 +176,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(FirebaseAuthService.getErrorMessage(e)),
+                              content: Text(
+                                FirebaseAuthService.getErrorMessage(e),
+                              ),
                             ),
                           );
                         } finally {
@@ -195,7 +199,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: TextStyle(color: AppColors.textBody, fontSize: 14),
                   ),
                   GestureDetector(
-                    onTap: () => Navigator.pushReplacementNamed(context, '/login'),
+                    onTap: () =>
+                        Navigator.pushReplacementNamed(context, '/login'),
                     child: const Text(
                       'Log In',
                       style: TextStyle(
