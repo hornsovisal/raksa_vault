@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_textfield.dart';
-import 'setup_pin_screen.dart';
+
 import '../widgets/custom_button.dart';
 import '../../data/services/firebase_auth_service.dart';
 
@@ -28,6 +28,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
@@ -137,51 +143,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
               CustomButton(
                 text: 'Create Account',
                 isLoading: _isLoading,
-                onPressed: () async {
-                  if (_passwordController.text !=
-                      _confirmPasswordController.text) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Passwords don't match")),
-                    );
-                    return;
-                  }
-                  setState(() {
-                    _isLoading = true;
-                  });
-                  try {
-                    final userCredential = await FirebaseAuth.instance
-                        .createUserWithEmailAndPassword(
-                          email: _emailController.text.trim(),
-                          password: _passwordController.text,
-                        );
+                onPressed: _passwordController.text.length < 8
+                    ? null
+                    : () async {
+                        if (_passwordController.text !=
+                            _confirmPasswordController.text) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Passwords don't match")),
+                          );
+                          return;
+                        }
+                        setState(() {
+                          _isLoading = true;
+                        });
+                        try {
+                          final userCredential = await FirebaseAuth.instance
+                              .createUserWithEmailAndPassword(
+                                email: _emailController.text.trim(),
+                                password: _passwordController.text,
+                              );
 
-                    await userCredential.user?.updateDisplayName(
-                      _fullNameController.text.trim(),
-                    );
+                          await userCredential.user?.updateDisplayName(
+                            _fullNameController.text.trim(),
+                          );
 
-                    if (!context.mounted) return;
+                          if (!context.mounted) return;
 
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SetupPinScreen(),
-                      ),
-                    );
-                  } on FirebaseAuthException catch (e) {
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(FirebaseAuthService.getErrorMessage(e)),
-                      ),
-                    );
-                  } finally {
-                    if (mounted) {
-                      setState(() {
-                        _isLoading = false;
-                      });
-                    }
-                  }
-                },
+                          Navigator.pushNamed(context, '/setup_pin');
+                        } on FirebaseAuthException catch (e) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(FirebaseAuthService.getErrorMessage(e)),
+                            ),
+                          );
+                        } finally {
+                          if (mounted) {
+                            setState(() {
+                              _isLoading = false;
+                            });
+                          }
+                        }
+                      },
               ),
               const SizedBox(height: 24),
               Row(
@@ -192,7 +195,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: TextStyle(color: AppColors.textBody, fontSize: 14),
                   ),
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () => Navigator.pushReplacementNamed(context, '/login'),
                     child: const Text(
                       'Log In',
                       style: TextStyle(

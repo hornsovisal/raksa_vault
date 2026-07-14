@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/pin_pad.dart';
 import '../theme/app_theme.dart';
 import '../../data/services/pin_service.dart';
-import 'vault_dashboard_screen.dart';
+
 import '../widgets/custom_button.dart';
 
 class UnlockScreen extends StatefulWidget {
@@ -23,9 +23,10 @@ class _UnlockScreenState extends State<UnlockScreen> {
       setState(() {
         _errorMsg = null;
       });
-      Navigator.pushReplacement(
+      Navigator.pushNamedAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const VaultDashboardScreen()),
+        '/dashboard',
+        (route) => route.isFirst,
       );
     } else {
       if (!mounted) return;
@@ -39,6 +40,14 @@ class _UnlockScreenState extends State<UnlockScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FE),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textDark),
+          onPressed: () => Navigator.pop(context),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(

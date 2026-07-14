@@ -3,7 +3,6 @@ import '../../data/services/pin_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pin_pad.dart';
 import '../widgets/custom_button.dart';
-import 'vault_dashboard_screen.dart';
 
 class SetupPinScreen extends StatefulWidget {
   const SetupPinScreen({super.key});
@@ -33,11 +32,11 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
 
     await _pinService.savePin(_enteredPin);
     if (!mounted) return;
-    
+
     setState(() {
       _isLoading = false;
     });
-    
+
     await showDialog(
       context: context,
       barrierDismissible: false,
@@ -59,18 +58,22 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text('Continue', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Continue',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ),
         ],
       ),
     );
-    
+
     if (!mounted) return;
-    
-    Navigator.pushReplacement(
+
+    Navigator.pushNamedAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => const VaultDashboardScreen()),
+      '/dashboard',
+      (route) => route.isFirst,
     );
   }
 
@@ -81,6 +84,10 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
         0xFFF8F9FE,
       ), // Background color matching the design
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textDark),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
           'Raksa Vault',
           style: AppTextStyles.headline.copyWith(
@@ -88,12 +95,6 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
             color: const Color(0xFF1E3A8A),
           ), // Dark blue
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close, color: AppColors.textDark),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
         centerTitle: false,
         elevation: 0,
         backgroundColor: Colors.transparent,

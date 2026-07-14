@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_textfield.dart';
-import 'register_screen.dart';
-import 'setup_pin_screen.dart';
-import 'unlock_screen.dart';
-import '../../data/services/pin_service.dart';
+
 import '../widgets/custom_button.dart';
 import '../../data/services/firebase_auth_service.dart';
 
@@ -137,27 +134,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                 // We check 'context.mounted' to ensure the screen is still visible before navigating to avoid crashes.
                                 if (!context.mounted) return;
 
-                                final hasPin = await PinService().hasPin();
-                                if (!context.mounted) return;
-
-                                if (hasPin) {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const UnlockScreen(),
-                                    ),
-                                  );
-                                } else {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const SetupPinScreen(),
-                                    ),
-                                  );
-                                }
+                                Navigator.pushNamed(context, '/unlock');
                               } on FirebaseAuthException catch (e) {
+                                if (mounted) {
+                                  setState(() {
+                                    _isLoading = false;
+                                  });
+                                }
                                 if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
@@ -188,12 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const RegisterScreen(),
-                        ),
-                      );
+                      Navigator.pushReplacementNamed(context, '/register');
                     },
                     child: const Text(
                       'Create Account',

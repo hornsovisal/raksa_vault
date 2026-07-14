@@ -8,6 +8,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'ui/screens/unlock_screen.dart';
 import 'ui/screens/setup_pin_screen.dart';
 import 'data/services/pin_service.dart';
+import 'ui/screens/vault_dashboard_screen.dart';
+import 'ui/screens/login_screen.dart';
+import 'ui/screens/register_screen.dart';
 
 void main() async {
   // Ensure that Flutter bindings are initialized before calling async methods like Firebase initialization.
@@ -29,6 +32,13 @@ class RaksaVaultApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: const AuthGate(),
+      routes: {
+        '/dashboard': (context) => const VaultDashboardScreen(),
+        '/login': (context) => const LoginScreen(),
+        '/register': (context) => const RegisterScreen(),
+        '/unlock': (context) => const UnlockScreen(),
+        '/setup_pin': (context) => const SetupPinScreen(),
+      },
     );
   }
 }
