@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../../main.dart'; // To access vaultRepository
+import '../../data/database/app_database.dart';
 import '../theme/app_theme.dart';
 import 'add_record_screen.dart';
-
-class VaultRecord {
-  final String title;
-  final String category;
-  final String subtitle;
-  VaultRecord({required this.title, required this.category, required this.subtitle});
-}
 
 class VaultDashboardScreen extends StatefulWidget {
   const VaultDashboardScreen({super.key});
@@ -18,7 +15,49 @@ class VaultDashboardScreen extends StatefulWidget {
 
 class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
   int _currentIndex = 0;
-  final List<VaultRecord> _records = [];
+  late Future<List<VaultItem>> _vaultItems;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVaultItems();
+  }
+
+  void _loadVaultItems() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _vaultItems = vaultRepository.getAllItems(user.uid);
+    } else {
+      _vaultItems = Future.value([]);
+    }
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _loadVaultItems();
+    });
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case "login":
+      case "logins":
+        return Icons.login;
+      case "card":
+      case "cards":
+        return Icons.credit_card;
+      case "note":
+      case "secure notes":
+        return Icons.note;
+      case "identity":
+      case "identities":
+        return Icons.person;
+      case "bank accounts":
+        return Icons.account_balance;
+      default:
+        return Icons.lock;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +65,7 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
       backgroundColor: const Color(0xFFF8F9FE),
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: const Color(0xFF1E3A8A)),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E3A8A)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -43,86 +82,101 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
         elevation: 0,
         centerTitle: false,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 16),
-            Text(
-              'Good Morning',
-              style: AppTextStyles.headline.copyWith(fontSize: 24, color: const Color(0xFF1E3A8A)),
-            ),
-            const SizedBox(height: 24),
-            
-            // Stat Cards Row
-            Row(
-              children: [
-                Expanded(child: _buildStatCard('Total Records', _records.length.toString())),
-                const SizedBox(width: 12),
-                Expanded(child: _buildStatCard('Categories', _records.map((e) => e.category).toSet().length.toString())),
-                const SizedBox(width: 12),
-                Expanded(child: _buildStatCard('Last Sync', 'Just now')),
-              ],
-            ),
-            const SizedBox(height: 24),
-            
-            // Chips Row
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
+      body: FutureBuilder<List<VaultItem>>(
+        future: _vaultItems,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
+
+          final items = snapshot.data ?? [];
+          final categoriesCount = items.map((e) => e.category).toSet().length;
+
+          return RefreshIndicator(
+            onRefresh: _refresh,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildChip('All', true),
-                  _buildChip('Passwords', false),
-                  _buildChip('Bank Accounts', false),
-                  _buildChip('Cards', false),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Good Morning',
+                    style: AppTextStyles.headline.copyWith(fontSize: 24, color: const Color(0xFF1E3A8A)),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Stat Cards Row
+                  Row(
+                    children: [
+                      Expanded(child: _buildStatCard('Total Records', items.length.toString())),
+                      const SizedBox(width: 12),
+                      Expanded(child: _buildStatCard('Categories', categoriesCount.toString())),
+                      const SizedBox(width: 12),
+                      Expanded(child: _buildStatCard('Last Sync', 'Just now')),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Chips Row
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildChip('All', true),
+                        _buildChip('Passwords', false),
+                        _buildChip('Bank Accounts', false),
+                        _buildChip('Cards', false),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // List of items
+                  if (items.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 48.0),
+                        child: Column(
+                          children: [
+                            Icon(Icons.folder_open, size: 64, color: Colors.grey[300]),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Your vault is empty.',
+                              style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Click the + button to add a record.',
+                              style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    ...items.map((record) => _buildListItem(record)),
+                  
+                  const SizedBox(height: 80), // padding for FAB
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            
-            // List of items
-            if (_records.isEmpty)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 48.0),
-                  child: Column(
-                    children: [
-                      Icon(Icons.folder_open, size: 64, color: Colors.grey[300]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Your vault is empty.',
-                        style: TextStyle(color: Colors.grey[500], fontSize: 16),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Click the + button to add a record.',
-                        style: TextStyle(color: Colors.grey[400], fontSize: 14),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else
-              ..._records.map((record) => _buildListItem(record)),
-            
-            const SizedBox(height: 80), // padding for FAB
-          ],
-        ),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF0F172A),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         onPressed: () async {
-          final newRecord = await Navigator.push(
+          await Navigator.push(
             context, 
             MaterialPageRoute(builder: (_) => const AddRecordScreen()),
           );
-          if (newRecord != null && newRecord is VaultRecord) {
-            setState(() {
-              _records.add(newRecord);
-            });
-          }
+          _refresh();
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -227,21 +281,18 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
     );
   }
 
-  Widget _buildListItem(VaultRecord record) {
-    IconData icon;
+  Widget _buildListItem(VaultItem record) {
+    IconData icon = _getCategoryIcon(record.category);
     Color bgColor;
     Color iconColor;
     
-    if (record.category == 'Bank Accounts') {
-      icon = Icons.account_balance;
+    if (record.category.toLowerCase().contains('bank')) {
       bgColor = const Color(0xFFD1FAE5);
       iconColor = const Color(0xFF059669);
-    } else if (record.category == 'Cards') {
-      icon = Icons.credit_card;
+    } else if (record.category.toLowerCase().contains('card')) {
       bgColor = const Color(0xFFD1FAE5);
       iconColor = const Color(0xFF059669);
     } else {
-      icon = Icons.lock_outline;
       bgColor = const Color(0xFFEFF6FF);
       iconColor = const Color(0xFF1E3A8A);
     }
@@ -279,7 +330,7 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  record.subtitle, 
+                  record.description, 
                   style: const TextStyle(
                     fontSize: 12, 
                     color: Color(0xFF64748B), 
