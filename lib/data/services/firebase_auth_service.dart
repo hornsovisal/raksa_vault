@@ -22,6 +22,7 @@ class FirebaseAuthService {
     return AppUser(
       uid: user.uid,
       email: user.email ?? '',
+      fullName: user.displayName ?? '',
       createdAt: user.metadata.creationTime ?? DateTime.now(),
     );
   }

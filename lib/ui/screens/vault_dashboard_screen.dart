@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:raksa_vault/ui/widgets/CustomButtomNav.dart';
 
 import '../../data/database/app_database.dart';
 import '../../data/repositories/vault_repository.dart';
-import '../widgets/category_card.dart';
+import '../../data/services/firebase_auth_service.dart';
+import '../widgets/stat_card.dart';
 import '../widgets/vault_tile.dart';
 
 class VaultDashboardScreen extends StatefulWidget {
@@ -21,25 +23,11 @@ class VaultDashboardScreen extends StatefulWidget {
 
 class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
   late Future<List<VaultItem>> _vaultItems;
-  // Return the  icon based on the vault item category.
-  IconData _getCategoryIcon(String category) {
-    switch (category.toLowerCase()) {
-      case "login":
-        return Icons.login;
 
-      case "card":
-        return Icons.credit_card;
+  int _selectedIndex = 0;
+  String _selectedCategory = "All";
 
-      case "note":
-        return Icons.note;
-
-      case "identity":
-        return Icons.person;
-
-      default:
-        return Icons.lock;
-    }
-  }
+  final FirebaseAuthService _authService = FirebaseAuthService();
 
   @override
   void initState() {
@@ -47,7 +35,6 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
     _loadVaultItems();
   }
 
-  //load all item by uusing repository
   void _loadVaultItems() {
     _vaultItems = widget.repository.getAllItems(widget.userId);
   }
@@ -58,183 +45,180 @@ class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
     });
   }
 
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case "login":
+        return Icons.login;
+      case "card":
+        return Icons.credit_card;
+      case "note":
+        return Icons.note;
+      case "identity":
+        return Icons.person;
+      default:
+        return Icons.lock;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final user = _authService.currentUser;
+
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text("Raksa Vault"),
-        actions: [IconButton(icon: const Icon(Icons.search), onPressed: () {})],
+        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.search))],
       ),
-      //FutureBuilder is a Flutter widget that waits for a Future to finish and buit the ui new
+
       body: FutureBuilder<List<VaultItem>>(
         future: _vaultItems,
         builder: (context, snapshot) {
-          //if connection is wating , show circular spin
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          //error, show error
           if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
+            return Center(child: Text(snapshot.error.toString()));
           }
 
-          //if it return item
           final items = snapshot.data ?? [];
 
-          //find the login category
-          final loginCount = items
-              .where((e) => e.category.toLowerCase() == "login")
-              .length;
+          final totalRecords = items.length;
 
-          //find the card category
+          final totalCategories = items.map((e) => e.category).toSet().length;
 
-          final cardCount = items
-              .where((e) => e.category.toLowerCase() == "card")
-              .length;
+          final categories = ["All", ...items.map((e) => e.category).toSet()];
 
-          //find the note category
+          final filteredItems = _selectedCategory == "All"
+              ? items
+              : items.where((e) => e.category == _selectedCategory).toList();
 
-          final noteCount = items
-              .where((e) => e.category.toLowerCase() == "note")
-              .length;
-
-          //find the identify category
-
-          final identityCount = items
-              .where((e) => e.category.toLowerCase() == "identity")
-              .length;
-
-          //return the category
           return RefreshIndicator(
             onRefresh: _refresh,
-            //make it scorelable , can use listview builder as well
-            child: SingleChildScrollView(
+            child: ListView(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Categories",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+
+              children: [
+                Text(
+                  "Good Morning ${user?.fullName}",
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
                   ),
+                ),
 
-                  const SizedBox(height: 16),
+                const SizedBox(height: 8),
 
-                  //show vategoryas grid
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.2,
-                    children: [
-                      CategoryCard(
-                        title: "Logins",
-                        icon: Icons.login,
-                        count: "$loginCount items",
-                        onTap: () {
-                          //should redireict to category of login
-                        },
-                      ),
-                      CategoryCard(
-                        title: "Cards",
-                        icon: Icons.credit_card,
-                        count: "$cardCount items",
-                        onTap: () {},
-                      ),
-                      CategoryCard(
-                        title: "Secure Notes",
-                        icon: Icons.note,
-                        count: "$noteCount items",
-                        onTap: () {},
-                      ),
-                      CategoryCard(
-                        title: "Identities",
-                        icon: Icons.person,
-                        count: "$identityCount items",
-                        onTap: () {},
-                      ),
-                    ],
-                  ),
+                const Text(
+                  "Welcome back to your secure vault.",
+                  style: TextStyle(color: Colors.grey),
+                ),
 
-                  const SizedBox(height: 32),
+                const SizedBox(height: 24),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        "Recent Items",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: StatCard(
+                        title: "Records",
+                        value: totalRecords.toString(),
                       ),
-                      TextButton(
-                        onPressed: () {},
-                        child: const Text("See All"),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  if (items.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 40),
-                      child: Center(
-                        child: Text(
-                          "No vault items found.",
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    )
-                  else
-                    ListView.builder(
-                      itemCount: items.length,
-                      shrinkWrap: true,
-                      itemBuilder: (context, index) {
-                        final item = items[index];
-
-                        return VaultTile(
-                          title: item.title,
-                          subtitle: item.description,
-                          leadingIcon: Icon(
-                            _getCategoryIcon(item.category),
-                            color: Theme.of(context).primaryColor,
-                          ),
-                          onTap: () {
-                            // TODO: Open detail page
-                          },
-                        );
-                      },
                     ),
-                ],
-              ),
+
+                    const SizedBox(width: 12),
+
+                    Expanded(
+                      child: StatCard(
+                        title: "Categories",
+                        value: totalCategories.toString(),
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
+                SizedBox(
+                  height: 42,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: categories.length,
+                    itemBuilder: (context, index) {
+                      final category = categories[index];
+
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          selected: _selectedCategory == category,
+                          label: Text(category),
+                          onSelected: (_) {
+                            setState(() {
+                              _selectedCategory = category;
+                            });
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                if (filteredItems.isEmpty)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(40),
+                      child: Text("No vault items found."),
+                    ),
+                  ),
+
+                ...filteredItems.map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: VaultTile(
+                      title: item.title,
+                      subtitle: item.description.isEmpty
+                          ? "••••••••"
+                          : item.description,
+                      leadingIcon: Icon(
+                        _getCategoryIcon(item.category),
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      onTap: () {},
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
         },
       ),
+
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          // Navigate to Add Vault Screen
+          // await Navigator.push(...AddVaultScreen());
 
-          // await Navigator.push(...);
-
-          // Reload after returning
-          _refresh();
+          await _refresh();
         },
         child: const Icon(Icons.add),
+      ),
+
+      bottomNavigationBar: CustomBottomNav(
+        currentIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+
+          // TODO:
+          // Navigate to Search
+          // Categories
+          // Settings
+        },
       ),
     );
   }
 }
-//When you navigate to the add-item screen, do:
-// await Navigator.push(
-//   context,
-//   MaterialPageRoute(
-//     builder: (_) => AddVaultScreen(),
-//   ),
-// );
-
-// _refresh();
