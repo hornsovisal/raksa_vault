@@ -5,6 +5,8 @@ import '../../data/services/pin_service.dart';
 
 import '../widgets/custom_button.dart';
 
+import '../../main.dart';
+
 class UnlockScreen extends StatefulWidget {
   const UnlockScreen({super.key});
 
@@ -19,9 +21,13 @@ class _UnlockScreenState extends State<UnlockScreen> {
   void _handlePinEntered(String pin) async {
     final isValid = await _pinService.verifyPin(pin);
     if (isValid) {
+      if (!mounted) return;
       setState(() {
         _errorMsg = null;
       });
+
+      initializeEncryptedDatabase(pin);
+
       Navigator.pushNamedAndRemoveUntil(
         context,
         '/dashboard',

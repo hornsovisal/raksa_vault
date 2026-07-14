@@ -12,6 +12,7 @@ class AddRecordScreen extends StatefulWidget {
 }
 
 class _AddRecordScreenState extends State<AddRecordScreen> {
+  //auto set selext password
   String _selectedCategory = 'Passwords';
   bool _obscureSensitive = true;
 
@@ -28,8 +29,9 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
     super.dispose();
   }
 
-  // Handles the SQLite Database Insert operation
+  // the SQLite Database Insert operation
   Future<void> _saveRecord() async {
+    //to save record we need that 3
     final title = _titleController.text.trim();
     final secretValue = _sensitiveController.text.trim();
     final description = _descriptionController.text.trim();
@@ -47,6 +49,7 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
       if (_selectedCategory == 'Bank Accounts') dbCategory = 'Identity';
       if (_selectedCategory == 'Cards') dbCategory = 'Card';
 
+      //call our repo to add item to db
       await vaultRepository.addItem(
         userId: widget.userId,
         title: title,
@@ -72,7 +75,7 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FE),
+      backgroundColor: const Color.fromARGB(255, 211, 217, 245),
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1E3A8A)),
@@ -89,6 +92,7 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
         elevation: 0,
         centerTitle: false,
       ),
+      //make it scolorable
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Container(
@@ -154,6 +158,7 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildLabel('Sensitive Information'),
+                  //we can set it to visibility to  see or not
                   GestureDetector(
                     onTap: () {
                       setState(() {
@@ -190,7 +195,7 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8F9FE),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                  border: Border.all(color: Colors.grey),
                 ),
                 child: Stack(
                   children: [
@@ -286,7 +291,7 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFF8F9FE),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+        border: Border.all(color: Colors.grey),
       ),
       child: TextField(
         controller: controller,

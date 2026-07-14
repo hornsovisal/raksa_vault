@@ -52,140 +52,138 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Welcome Back',
-                style: AppTextStyles.headline.copyWith(fontSize: 24),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Sign in to access your secure vault.',
-                style: TextStyle(fontSize: 14, color: AppColors.textBody),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              // White Form Card
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.card,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    CustomTextField(
-                      controller: _emailController,
-                      label: 'Email Address',
-                      hint: 'name@company.com',
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextField(
-                      controller: _passwordController,
-                      label: 'Password',
-                      hint: '••••••••',
-                      isPassword: true,
-                      trailing: GestureDetector(
-                        onTap: () {},
-                        child: const Text(
-                          'Forgot Password?',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    CustomButton(
-                      text: 'Login',
-                      isLoading: _isLoading,
-                      onPressed:
-                          (_emailController.text.trim().isEmpty ||
-                              _passwordController.text.isEmpty)
-                          ? null
-                          : () async {
-                              setState(() {
-                                _isLoading = true;
-                              });
-                              try {
-                                // Attempt to sign in the user with Firebase Authentication.
-                                await FirebaseAuth.instance
-                                    .signInWithEmailAndPassword(
-                                      email: _emailController.text.trim(),
-                                      password: _passwordController.text,
-                                    );
-
-                                // IMPORTANT: After an 'await', the user might have closed the screen before the async task finished.
-                                // We check 'context.mounted' to ensure the screen is still visible before navigating to avoid crashes.
-                                if (!context.mounted) return;
-
-                                Navigator.pushNamed(context, '/unlock');
-                              } on FirebaseAuthException catch (e) {
-                                if (mounted) {
-                                  setState(() {
-                                    _isLoading = false;
-                                  });
-                                }
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      FirebaseAuthService.getErrorMessage(e),
-                                    ),
-                                  ),
-                                );
-                              } finally {
-                                if (mounted) {
-                                  setState(() {
-                                    _isLoading = false;
-                                  });
-                                }
-                              }
-                            },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    "Don't have an account? ",
-                    style: TextStyle(color: AppColors.textBody, fontSize: 14),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pushReplacementNamed(context, '/register');
-                    },
-                    child: const Text(
-                      'Create Account',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Welcome Back',
+              style: AppTextStyles.headline.copyWith(fontSize: 24),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Sign in to access your secure vault.',
+              style: TextStyle(fontSize: 14, color: AppColors.textBody),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            // White Form Card
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
-            ],
-          ),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  CustomTextField(
+                    controller: _emailController,
+                    label: 'Email Address',
+                    hint: 'name@company.com',
+                  ),
+                  const SizedBox(height: 16),
+                  CustomTextField(
+                    controller: _passwordController,
+                    label: 'Password',
+                    hint: '••••••••',
+                    isPassword: true,
+                    trailing: GestureDetector(
+                      onTap: () {},
+                      child: const Text(
+                        'Forgot Password?',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  CustomButton(
+                    text: 'Login',
+                    isLoading: _isLoading,
+                    onPressed:
+                        (_emailController.text.trim().isEmpty ||
+                            _passwordController.text.isEmpty)
+                        ? null
+                        : () async {
+                            setState(() {
+                              _isLoading = true;
+                            });
+                            try {
+                              // Attempt to sign in the user with Firebase Authentication.
+                              await FirebaseAuth.instance
+                                  .signInWithEmailAndPassword(
+                                    email: _emailController.text.trim(),
+                                    password: _passwordController.text,
+                                  );
+
+                              // IMPORTANT: After an 'await', the user might have closed the screen before the async task finished.
+                              // We check 'context.mounted' to ensure the screen is still visible before navigating to avoid crashes.
+                              if (!context.mounted) return;
+
+                              Navigator.pushNamed(context, '/unlock');
+                            } on FirebaseAuthException catch (e) {
+                              if (mounted) {
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              }
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    FirebaseAuthService.getErrorMessage(e),
+                                  ),
+                                ),
+                              );
+                            } finally {
+                              if (mounted) {
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              }
+                            }
+                          },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  "Don't have an account? ",
+                  style: TextStyle(color: AppColors.textBody, fontSize: 14),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pushReplacementNamed(context, '/register');
+                  },
+                  child: const Text(
+                    'Create Account',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

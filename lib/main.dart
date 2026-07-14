@@ -17,11 +17,15 @@ import 'ui/screens/vault_dashboard_screen.dart';
 import 'ui/screens/login_screen.dart';
 import 'ui/screens/register_screen.dart';
 
-// One database instance for the entire app
-final AppDatabase database = AppDatabase();
+// ✅ Declare these as late globals
+late final AppDatabase database;
+late final VaultRepository vaultRepository;
 
-// One repository instance for the entire app
-final VaultRepository vaultRepository = VaultRepository(database);
+/// Call this helper function right after the user enters their PIN successfully
+void initializeEncryptedDatabase(String userPin) {
+  database = AppDatabase(userPin); // Pass the PIN as the decryption key
+  vaultRepository = VaultRepository(database);
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
