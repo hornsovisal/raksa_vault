@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:raksa_vault/ui/screens/add_record_screen.dart';
 import 'package:raksa_vault/ui/screens/record_detail_screen.dart';
 import 'package:raksa_vault/ui/theme/app_theme.dart';
-import 'package:raksa_vault/ui/widgets/CustomButtomNav.dart';
+import 'package:raksa_vault/ui/widgets/custom_bottom_nav.dart';
 
 import '../../data/database/app_database.dart';
 import '../../data/repositories/vault_repository.dart';

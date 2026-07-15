@@ -26,6 +26,8 @@ dependencies:
   path: ^1.9.0
   responsive_framework: ^1.5.1
   sqflite_sqlcipher: ^3.0.0
+  local_auth_android: ^1.0.56
+  local_auth_darwin: ^1.6.1
 
 dev_dependencies:
   flutter_test:

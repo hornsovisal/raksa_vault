@@ -12,6 +12,7 @@ import 'ui/theme/app_theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'ui/screens/unlock_screen.dart';
 import 'ui/screens/setup_pin_screen.dart';
+import 'ui/screens/setup_success_screen.dart';
 import 'data/services/pin_service.dart';
 import 'ui/screens/vault_dashboard_screen.dart';
 import 'ui/screens/login_screen.dart';
@@ -54,6 +55,7 @@ class RaksaVaultApp extends StatelessWidget {
         '/register': (context) => const RegisterScreen(),
         '/unlock': (context) => const UnlockScreen(),
         '/setup_pin': (context) => const SetupPinScreen(),
+        '/setup_success': (context) => const SetupSuccessScreen(),
       },
       builder: (context, child) {
         return ResponsiveBreakpoints.builder(

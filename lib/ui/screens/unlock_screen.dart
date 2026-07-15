@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'face_scan_screen.dart';
 import '../widgets/pin_pad.dart';
 import '../theme/app_theme.dart';
 import '../../data/services/pin_service.dart';
@@ -90,8 +91,28 @@ class _UnlockScreenState extends State<UnlockScreen> {
               CustomButton(
                 text: 'Unlock with Biometrics',
                 backgroundColor: const Color(0xFF1E3A8A), // dark blue
-                onPressed: () {
-                  // Biometrics not fully implemented in this demo
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const FaceScanScreen()),
+                  );
+                  
+                  if (result == true) {
+                    final pin = await _pinService.getPinForBiometric();
+                    if (!context.mounted) return;
+                    if (pin != null) {
+                      initializeEncryptedDatabase(pin);
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/dashboard',
+                        (route) => route.isFirst,
+                      );
+                    } else {
+                      setState(() {
+                        _errorMsg = 'Failed to retrieve PIN for biometrics.';
+                      });
+                    }
+                  }
                 },
               ),
               const SizedBox(height: 12),
