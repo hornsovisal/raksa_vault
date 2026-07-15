@@ -23,6 +23,7 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
   bool _isVerified = false;
   String? _errorMsg;
 
+  //handle the enter of pin
   void _handlePinEntered(String pin) async {
     final isValid = await PinService().verifyPin(pin);
     if (!mounted) return;
