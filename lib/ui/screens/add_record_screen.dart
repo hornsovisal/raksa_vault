@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
-import '../../main.dart'; // ✅ Imported main.dart to access global vaultRepository
+import '../../main.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_button.dart';
+
+enum RecordCategory {
+  passwords(displayName: 'Passwords', dbValue: 'Login'),
+  bankAccounts(displayName: 'Bank Accounts', dbValue: 'Identity'),
+  cards(displayName: 'Cards', dbValue: 'Card');
+
+  final String displayName;
+  final String dbValue;
+
+  const RecordCategory({required this.displayName, required this.dbValue});
+}
 
 class AddRecordScreen extends StatefulWidget {
   final String userId;
@@ -12,11 +23,9 @@ class AddRecordScreen extends StatefulWidget {
 }
 
 class _AddRecordScreenState extends State<AddRecordScreen> {
-  //auto set selext password
-  String _selectedCategory = 'Passwords';
+  RecordCategory _selectedCategory = RecordCategory.passwords;
   bool _obscureSensitive = true;
 
-  // Controllers to capture user input
   final _titleController = TextEditingController();
   final _sensitiveController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -29,9 +38,7 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
     super.dispose();
   }
 
-  // the SQLite Database Insert operation
   Future<void> _saveRecord() async {
-    //to save record we need that 3
     final title = _titleController.text.trim();
     final secretValue = _sensitiveController.text.trim();
     final description = _descriptionController.text.trim();
@@ -44,22 +51,16 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
     }
 
     try {
-      String dbCategory = _selectedCategory;
-      if (_selectedCategory == 'Passwords') dbCategory = 'Login';
-      if (_selectedCategory == 'Bank Accounts') dbCategory = 'Identity';
-      if (_selectedCategory == 'Cards') dbCategory = 'Card';
-
-      //call our repo to add item to db
+      //add item to our db
       await vaultRepository.addItem(
         userId: widget.userId,
         title: title,
-        category: dbCategory,
+        category: _selectedCategory.dbValue,
         secretValue: secretValue,
         description: description,
         isFavorite: false,
       );
 
-      // Pop back to the Dashboard returning true so it triggers a refresh
       if (mounted) {
         Navigator.pop(context, true);
       }
@@ -75,32 +76,31 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 211, 217, 245),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E3A8A)),
+          icon: const Icon(Icons.arrow_back, color: AppColors.primary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Add New Record',
           style: AppTextStyles.headline.copyWith(
             fontSize: 18,
-            color: const Color(0xFF1E3A8A),
+            color: AppColors.tertiary,
           ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
       ),
-      //make it scolorable
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.card,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey),
+            border: Border.all(color: AppColors.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,28 +110,27 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8F9FE),
+                  color: AppColors.background,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
+                  // 4. Update Dropdown to use RecordCategory type
+                  child: DropdownButton<RecordCategory>(
                     value: _selectedCategory,
                     isExpanded: true,
                     icon: const Icon(
                       Icons.keyboard_arrow_down,
-                      color: Color(0xFF64748B),
+                      color: AppColors.textMuted,
                     ),
-                    items: ['Passwords', 'Bank Accounts', 'Cards'].map((
-                      String value,
-                    ) {
-                      return DropdownMenuItem<String>(
-                        value: value,
+                    // Map over the enum values automatically
+                    items: RecordCategory.values.map((RecordCategory category) {
+                      return DropdownMenuItem<RecordCategory>(
+                        value: category,
                         child: Text(
-                          value,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF1E293B),
+                          category.displayName,
+                          style: AppTextStyles.body.copyWith(
+                            color: AppColors.textDark,
                           ),
                         ),
                       );
@@ -158,7 +157,6 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildLabel('Sensitive Information'),
-                  //we can set it to visibility to  see or not
                   GestureDetector(
                     onTap: () {
                       setState(() {
@@ -172,15 +170,14 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
                           size: 14,
-                          color: const Color(0xFF1E3A8A),
+                          color: AppColors.primary,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           _obscureSensitive ? 'Show' : 'Hide',
-                          style: const TextStyle(
-                            fontSize: 12,
+                          style: AppTextStyles.label.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E3A8A),
+                            color: AppColors.primary,
                           ),
                         ),
                       ],
@@ -193,9 +190,9 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                 height: 120,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8F9FE),
+                  color: AppColors.background,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Stack(
                   children: [
@@ -203,17 +200,15 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                       controller: _sensitiveController,
                       maxLines: _obscureSensitive ? 1 : null,
                       obscureText: _obscureSensitive,
-                      decoration: const InputDecoration.collapsed(
+                      decoration: InputDecoration.collapsed(
                         hintText:
                             'Paste password, key, or\nsensitive text here...',
-                        hintStyle: TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF94A3B8),
+                        hintStyle: AppTextStyles.body.copyWith(
+                          color: AppColors.textMuted,
                           fontFamily: 'monospace',
                         ),
                       ),
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: AppTextStyles.body.copyWith(
                         fontFamily: 'monospace',
                       ),
                     ),
@@ -223,13 +218,13 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
+                          color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
                           Icons.content_paste,
                           size: 16,
-                          color: Color(0xFF1E3A8A),
+                          color: AppColors.primary,
                         ),
                       ),
                     ),
@@ -240,7 +235,7 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
               const SizedBox(height: 24),
               Row(
                 children: [
-                  const Icon(Icons.sort, size: 14, color: Color(0xFF64748B)),
+                  const Icon(Icons.sort, size: 14, color: AppColors.textMuted),
                   const SizedBox(width: 4),
                   _buildLabel('Description (Optional)'),
                 ],
@@ -254,14 +249,14 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
               const SizedBox(height: 32),
               CustomButton(
                 text: 'Save Record',
-                backgroundColor: const Color(0xFF0F172A),
+                backgroundColor: AppColors.textDark,
                 onPressed: _saveRecord,
               ),
               const SizedBox(height: 12),
               CustomButton(
                 text: 'Cancel',
                 backgroundColor: Colors.transparent,
-                textColor: const Color(0xFF64748B),
+                textColor: AppColors.textMuted,
                 onPressed: () => Navigator.pop(context),
               ),
             ],
@@ -274,10 +269,9 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: const TextStyle(
-        fontSize: 12,
+      style: AppTextStyles.label.copyWith(
         fontWeight: FontWeight.bold,
-        color: Color(0xFF1E293B),
+        color: AppColors.textDark,
       ),
     );
   }
@@ -289,15 +283,16 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FE),
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey),
+        border: Border.all(color: AppColors.border),
       ),
       child: TextField(
         controller: controller,
+        style: AppTextStyles.body,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
+          hintStyle: AppTextStyles.body.copyWith(color: AppColors.textMuted),
           border: InputBorder.none,
         ),
       ),

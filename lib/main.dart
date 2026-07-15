@@ -17,11 +17,10 @@ import 'ui/screens/vault_dashboard_screen.dart';
 import 'ui/screens/login_screen.dart';
 import 'ui/screens/register_screen.dart';
 
-// ✅ Declare these as late globals
 late final AppDatabase database;
 late final VaultRepository vaultRepository;
 
-/// Call this helper function right after the user enters their PIN successfully
+/// Call this helper function right after the user enters their PIN
 void initializeEncryptedDatabase(String userPin) {
   database = AppDatabase(userPin); // Pass the PIN as the decryption key
   vaultRepository = VaultRepository(database);
