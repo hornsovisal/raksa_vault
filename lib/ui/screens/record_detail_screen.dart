@@ -98,9 +98,7 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
           const SizedBox(height: 24),
           _buildDetailItem(
             'Sensitive Information',
-            widget
-                .item
-                .secretValue, // ✅ Pulled directly from database secret record
+            widget.item.secretValue,
             isSensitive: true,
           ),
           const SizedBox(height: 24),
@@ -138,7 +136,7 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.withOpacity(0.2)),
+            border: Border.all(color: Colors.grey),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -161,7 +159,6 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
                     color: Color(0xFF1E3A8A),
                   ),
                   onPressed: () {
-                    // Quick convenience copy logic
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Copied to clipboard')),
                     );
