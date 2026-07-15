@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
+// Update this import path to match your actual structure
+import '../../data/repositories/auth_repository.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_textfield.dart';
-
 import '../widgets/custom_button.dart';
-import '../../data/services/firebase_auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,9 +14,10 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  //to check strong password or not
+  // Initialize the repository
+  final AuthRepository _authRepository = AuthRepository();
+
   bool isStrongPassword(String password) {
-    //need to 8 password ,
     return password.length >= 8 &&
         password.contains(RegExp(r'[A-Z]')) &&
         password.contains(RegExp(r'[a-z]')) &&
@@ -33,6 +34,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void initState() {
     super.initState();
     _passwordController.addListener(() => setState(() {}));
+    _emailController.addListener(() => setState(() {}));
+    _fullNameController.addListener(() => setState(() {}));
   }
 
   @override
@@ -111,7 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9), // Very light blue/grey
+                  color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Column(
@@ -143,40 +146,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
               CustomButton(
                 text: 'Create Account',
                 isLoading: _isLoading,
-                onPressed: _passwordController.text.length < 8
+                onPressed:
+                    !isStrongPassword(_passwordController.text) ||
+                        _emailController.text.trim().isEmpty ||
+                        _fullNameController.text.trim().isEmpty
                     ? null
                     : () async {
                         if (_passwordController.text !=
                             _confirmPasswordController.text) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Passwords don't match")),
+                            const SnackBar(
+                              content: Text("Passwords don't match"),
+                            ),
                           );
                           return;
                         }
+
                         setState(() {
                           _isLoading = true;
                         });
+
                         try {
-                          final userCredential = await FirebaseAuth.instance
-                              .createUserWithEmailAndPassword(
-                                email: _emailController.text.trim(),
-                                password: _passwordController.text,
-                              );
-
-                          await userCredential.user?.updateDisplayName(
-                            _fullNameController.text.trim(),
+                          //call auth repo to signup with email , password , and pass name
+                          await _authRepository.signUpWithEmail(
+                            email: _emailController.text.trim(),
+                            password: _passwordController.text,
+                            fullName: _fullNameController.text.trim(),
                           );
 
                           if (!context.mounted) return;
-
                           Navigator.pushNamed(context, '/setup_pin');
-                        } on FirebaseAuthException catch (e) {
+                        } catch (e) {
                           if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(FirebaseAuthService.getErrorMessage(e)),
-                            ),
+
+                          final errorMessage = e.toString().replaceAll(
+                            'Exception: ',
+                            '',
                           );
+
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text(errorMessage)));
                         } finally {
                           if (mounted) {
                             setState(() {
@@ -195,7 +205,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: TextStyle(color: AppColors.textBody, fontSize: 14),
                   ),
                   GestureDetector(
-                    onTap: () => Navigator.pushReplacementNamed(context, '/login'),
+                    onTap: () =>
+                        Navigator.pushReplacementNamed(context, '/login'),
                     child: const Text(
                       'Log In',
                       style: TextStyle(
@@ -206,18 +217,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 48),
-              const Center(
-                child: Text(
-                  'SECURE BY DESIGN',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.5,
-                    color: AppColors.textMuted,
-                  ),
-                ),
               ),
             ],
           ),

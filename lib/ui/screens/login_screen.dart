@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../../data/repositories/auth_repository.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_textfield.dart';
-
 import '../widgets/custom_button.dart';
-import '../../data/services/firebase_auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,6 +12,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final AuthRepository _authRepository = AuthRepository();
+
+  //two text field email password
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
@@ -98,7 +99,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     hint: '••••••••',
                     isPassword: true,
                     trailing: GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        // TODO: Implement forgot password
+                      },
                       child: const Text(
                         'Forgot Password?',
                         style: TextStyle(
@@ -121,32 +124,27 @@ class _LoginScreenState extends State<LoginScreen> {
                             setState(() {
                               _isLoading = true;
                             });
+
                             try {
-                              // Attempt to sign in the user with Firebase Authentication.
-                              await FirebaseAuth.instance
-                                  .signInWithEmailAndPassword(
-                                    email: _emailController.text.trim(),
-                                    password: _passwordController.text,
-                                  );
+                              // Call the repository to signin with email
+                              await _authRepository.signInWithEmail(
+                                email: _emailController.text.trim(),
+                                password: _passwordController.text,
+                              );
 
-                              // IMPORTANT: After an 'await', the user might have closed the screen before the async task finished.
-                              // We check 'context.mounted' to ensure the screen is still visible before navigating to avoid crashes.
                               if (!context.mounted) return;
-
                               Navigator.pushNamed(context, '/unlock');
-                            } on FirebaseAuthException catch (e) {
-                              if (mounted) {
-                                setState(() {
-                                  _isLoading = false;
-                                });
-                              }
+                            } catch (e) {
                               if (!context.mounted) return;
+
+                              // Extract message, stripping out the "Exception: " prefix
+                              final errorMessage = e.toString().replaceAll(
+                                'Exception: ',
+                                '',
+                              );
+
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    FirebaseAuthService.getErrorMessage(e),
-                                  ),
-                                ),
+                                SnackBar(content: Text(errorMessage)),
                               );
                             } finally {
                               if (mounted) {
@@ -170,6 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 GestureDetector(
                   onTap: () {
+                    //go to register
                     Navigator.pushReplacementNamed(context, '/register');
                   },
                   child: const Text(
