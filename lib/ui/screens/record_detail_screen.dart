@@ -21,21 +21,22 @@ class RecordDetailScreen extends StatefulWidget {
 
 class _RecordDetailScreenState extends State<RecordDetailScreen> {
   bool _isVerified = false;
-  String? _errorMsg;
+  String? errorMessage;
 
   //handle the enter of pin
   void _handlePinEntered(String pin) async {
+    //verify the pin
     final isValid = await PinService().verifyPin(pin);
-    if (!mounted) return;
 
+    //if it valid , return true , if no show error message
     if (isValid) {
       setState(() {
         _isVerified = true;
-        _errorMsg = null;
+        errorMessage = null;
       });
     } else {
       setState(() {
-        _errorMsg = 'Incorrect PIN';
+        errorMessage = 'Incorrect PIN';
       });
     }
   }
@@ -79,7 +80,7 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
           PinPad(
             pinLength: 6,
             onPinEntered: _handlePinEntered,
-            errorText: _errorMsg,
+            errorText: errorMessage,
           ),
           const SizedBox(height: 64),
         ],

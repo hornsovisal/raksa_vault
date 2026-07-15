@@ -1,18 +1,18 @@
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:local_auth_android/local_auth_android.dart';
-import 'package:local_auth_darwin/local_auth_darwin.dart';
 
 class BiometricService {
+  //local auth from library to do biometric auth
   final _auth = LocalAuthentication();
 
   /// Checks if Face ID is set up on the device
   Future<bool> hasFaceAuth() async {
     try {
-      final canCheck = await _auth.canCheckBiometrics;
-      if (!canCheck) return false;
+      final hasBio = await _auth.canCheckBiometrics;
+      if (!hasBio) return false;
 
       final enrolled = await _auth.getAvailableBiometrics();
+      //return if it can face or not
       return enrolled.contains(BiometricType.face);
     } on PlatformException {
       return false;

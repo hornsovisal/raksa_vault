@@ -23,7 +23,7 @@ class PinService {
   Future<bool> verifyPin(String pin) async {
     final savedPin = await _readPin();
 
-    // If the PIN is missing, the user must go through setup or registration.
+    // If the PIN is missing, the user must go through setup  registration.
     if (savedPin == null) {
       return false;
     }
