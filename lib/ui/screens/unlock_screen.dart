@@ -18,6 +18,42 @@ class UnlockScreen extends StatefulWidget {
 class _UnlockScreenState extends State<UnlockScreen> {
   String? _errorMsg;
   final _pinService = PinService();
+  bool _hasAttemptedAutoBiometric = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_hasAttemptedAutoBiometric) {
+        _hasAttemptedAutoBiometric = true;
+        _attemptBiometricUnlock();
+      }
+    });
+  }
+
+  Future<void> _attemptBiometricUnlock() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const FaceScanScreen()),
+    );
+    
+    if (result == true) {
+      final pin = await _pinService.getPinForBiometric();
+      if (!mounted) return;
+      if (pin != null) {
+        initializeEncryptedDatabase(pin);
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/dashboard',
+          (route) => route.isFirst,
+        );
+      } else {
+        setState(() {
+          _errorMsg = 'Failed to retrieve PIN for biometrics.';
+        });
+      }
+    }
+  }
 
   void _handlePinEntered(String pin) async {
     final isValid = await _pinService.verifyPin(pin);
@@ -91,29 +127,7 @@ class _UnlockScreenState extends State<UnlockScreen> {
               CustomButton(
                 text: 'Unlock with Biometrics',
                 backgroundColor: const Color(0xFF1E3A8A), // dark blue
-                onPressed: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const FaceScanScreen()),
-                  );
-                  
-                  if (result == true) {
-                    final pin = await _pinService.getPinForBiometric();
-                    if (!context.mounted) return;
-                    if (pin != null) {
-                      initializeEncryptedDatabase(pin);
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        '/dashboard',
-                        (route) => route.isFirst,
-                      );
-                    } else {
-                      setState(() {
-                        _errorMsg = 'Failed to retrieve PIN for biometrics.';
-                      });
-                    }
-                  }
-                },
+                onPressed: _attemptBiometricUnlock,
               ),
               const SizedBox(height: 12),
 
