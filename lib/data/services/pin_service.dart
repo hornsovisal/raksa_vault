@@ -14,7 +14,9 @@ class PinService {
     _inMemoryPin = pin;
     try {
       await _secureStorage.write(key: _pinKey, value: pin);
-    } catch (e) {}
+    } catch (e) {
+      throw Exception(e.toString());
+    }
   }
 
   /// Verifies if the entered PIN matches the securely stored PIN
@@ -35,19 +37,18 @@ class PinService {
     return savedPin != null && savedPin.isNotEmpty;
   }
 
-  /// Reads the PIN securely from iOS Keychain / Android Keystore
+  /// Reads the PIN securely from Flutter secure storage
   Future<String?> _readPin() async {
     if (_inMemoryPin != null) return _inMemoryPin;
     try {
       _inMemoryPin = await _secureStorage.read(key: _pinKey);
       return _inMemoryPin;
     } catch (e) {
-      // Secure fallback
+      throw Exception(e.toString());
     }
-    return null;
   }
 
-  /// Clear the PIN if the user logs out or resets the app
+  /// Clear the PIN if the user close app
   Future<void> clearPin() async {
     _inMemoryPin = null;
     await _secureStorage.delete(key: _pinKey);
