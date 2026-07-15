@@ -14,9 +14,7 @@ class PinService {
     _inMemoryPin = pin;
     try {
       await _secureStorage.write(key: _pinKey, value: pin);
-    } catch (e) {
-      // Handle storage errors securely (e.g., logging safely without printing the PIN)
-    }
+    } catch (e) {}
   }
 
   /// Verifies if the entered PIN matches the securely stored PIN

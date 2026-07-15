@@ -48,5 +48,3 @@ flutter:
     - assets/images/
     - assets/image_2026-06-30_14-08-59.png
 
-  sqlite3:
-    source: sqlite3mc
