@@ -1,7 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class PinService {
-  // Use Flutter Secure Storage which leverages Android Keystore and iOS Keychain
+  // Use Flutter Secure Storage which use Android Keystore and iOS Keychain
   final _secureStorage = const FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
@@ -51,5 +51,10 @@ class PinService {
   Future<void> clearPin() async {
     _inMemoryPin = null;
     await _secureStorage.delete(key: _pinKey);
+  }
+
+  //get pin for biometric
+  Future<String?> getPinForBiometric() async {
+    return await _readPin();
   }
 }
