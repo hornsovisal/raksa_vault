@@ -31,6 +31,41 @@ class AddRecordScreen extends StatefulWidget {
 }
 
 class AddRecordScreenState extends State<AddRecordScreen> {
+  // make label text
+  Widget buildLabel(String text) {
+    return Text(
+      text,
+      style: AppTextStyles.label.copyWith(
+        fontWeight: FontWeight.bold,
+        color: AppColors.textDark,
+      ),
+    );
+  }
+
+  // make normal input box
+  Widget buildTextField(
+    String hint, {
+    required TextEditingController controller,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: TextField(
+        controller: controller,
+        style: AppTextStyles.body,
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: AppTextStyles.body.copyWith(color: AppColors.textMuted),
+          border: InputBorder.none,
+        ),
+      ),
+    );
+  }
+
   // default category
   RecordCategory selectedCategory = RecordCategory.passwords;
 
@@ -123,7 +158,6 @@ class AddRecordScreenState extends State<AddRecordScreen> {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          // main form box
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -336,41 +370,6 @@ class AddRecordScreenState extends State<AddRecordScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  // make label text
-  Widget buildLabel(String text) {
-    return Text(
-      text,
-      style: AppTextStyles.label.copyWith(
-        fontWeight: FontWeight.bold,
-        color: AppColors.textDark,
-      ),
-    );
-  }
-
-  // make normal input box
-  Widget buildTextField(
-    String hint, {
-    required TextEditingController controller,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: TextField(
-        controller: controller,
-        style: AppTextStyles.body,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: AppTextStyles.body.copyWith(color: AppColors.textMuted),
-          border: InputBorder.none,
-        ),
       ),
     );
   }
