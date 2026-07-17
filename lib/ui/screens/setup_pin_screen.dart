@@ -1,43 +1,44 @@
 import 'package:flutter/material.dart';
-import '../../data/services/pin_service.dart';
-import '../theme/app_theme.dart';
-import '../widgets/pin_pad.dart';
-import '../widgets/custom_button.dart';
+import 'package:raksa_vault/data/services/pin_service.dart';
+import 'package:raksa_vault/ui/theme/app_theme.dart';
+import 'package:raksa_vault/ui/widgets/custom_button.dart';
+import 'package:raksa_vault/ui/widgets/pin_pad.dart';
+
 import '../../main.dart';
 
 class SetupPinScreen extends StatefulWidget {
   const SetupPinScreen({super.key});
 
   @override
-  State<SetupPinScreen> createState() => _SetupPinScreenState();
+  State<SetupPinScreen> createState() => SetupPinScreenState();
 }
 
-class _SetupPinScreenState extends State<SetupPinScreen> {
-  String? _errorMsg;
-  String _enteredPin = '';
-  final _pinService = PinService();
-  bool _isLoading = false;
+class SetupPinScreenState extends State<SetupPinScreen> {
+  String? errorMsg;
+  String enteredPin = '';
+  final pinService = PinService();
+  bool isLoading = false;
 
-  void _handlePinChanged(String pin) {
+  void handlePinChanged(String pin) {
     setState(() {
-      _enteredPin = pin;
-      _errorMsg = null;
+      enteredPin = pin;
+      errorMsg = null;
     });
   }
 
-  void _handleFinishSetup() async {
-    if (_enteredPin.length != 6) return;
+  void handleFinishSetup() async {
+    if (enteredPin.length != 6) return;
     setState(() {
-      _isLoading = true;
+      isLoading = true;
     });
     //Save the pin to Flutter secuer storage
-    await _pinService.savePin(_enteredPin);
+    await pinService.savePin(enteredPin);
     //init the encrypt db with pin
-    initializeEncryptedDatabase(_enteredPin);
+    initializeEncryptedDatabase(enteredPin);
     if (!mounted) return;
 
     setState(() {
-      _isLoading = false;
+      isLoading = false;
     });
 
     await showDialog(
@@ -252,23 +253,23 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
                       PinPad(
                         pinLength: 6,
                         onPinEntered: (pin) {
-                          _handlePinChanged(pin);
+                          handlePinChanged(pin);
                         },
-                        onPinChanged: _handlePinChanged,
-                        errorText: _errorMsg,
+                        onPinChanged: handlePinChanged,
+                        errorText: errorMsg,
                       ),
                       const SizedBox(height: 24),
                       CustomButton(
                         text: 'Finish Setup',
-                        isLoading: _isLoading,
-                        backgroundColor: _enteredPin.length == 6
+                        isLoading: isLoading,
+                        backgroundColor: enteredPin.length == 6
                             ? const Color(0xFF1E3A8A)
                             : const Color(0xFFCBD5E1),
-                        textColor: _enteredPin.length == 6
+                        textColor: enteredPin.length == 6
                             ? Colors.white
                             : const Color(0xFF64748B),
-                        onPressed: _enteredPin.length == 6
-                            ? _handleFinishSetup
+                        onPressed: enteredPin.length == 6
+                            ? handleFinishSetup
                             : null,
                       ),
                     ],
