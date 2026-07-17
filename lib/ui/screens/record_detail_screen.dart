@@ -23,6 +23,32 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
   bool _isVerified = false;
   String? errorMessage;
 
+  void _confirmDelete() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Record'),
+        content: const Text('Are you sure you want to delete this record? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context); // close dialog
+              await widget.repository.deleteItem(widget.item.id);
+              if (mounted) {
+                Navigator.pop(context, true); // go back to dashboard
+              }
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   //handle the enter of pin
   void _handlePinEntered(String pin) async {
     //verify the pin
@@ -60,6 +86,14 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
+        actions: _isVerified
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  onPressed: _confirmDelete,
+                ),
+              ]
+            : null,
       ),
       body: _isVerified ? _buildDetails() : _buildPinVerification(),
     );
