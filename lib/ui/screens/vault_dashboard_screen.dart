@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:raksa_vault/ui/screens/add_record_screen.dart';
+import 'package:raksa_vault/ui/screens/category_screen.dart';
 import 'package:raksa_vault/ui/screens/record_detail_screen.dart';
 import 'package:raksa_vault/ui/theme/app_theme.dart';
 import 'package:raksa_vault/ui/widgets/custom_bottom_nav.dart';
@@ -183,7 +184,11 @@ class VaultDashboardScreenState extends State<VaultDashboardScreen> {
       ),
 
       // wait database item load
-      body: FutureBuilder<List<VaultItem>>(
+      body: selectedIndex == 2
+          ? const CategoryScreen()
+          : selectedIndex != 0
+              ? const Center(child: Text("Under Construction"))
+              : FutureBuilder<List<VaultItem>>(
         future: vaultItems,
         builder: (context, snapshot) {
           // show loading while wait data
@@ -429,7 +434,7 @@ class VaultDashboardScreenState extends State<VaultDashboardScreen> {
       ),
 
       // add new record button
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: selectedIndex != 0 ? null : FloatingActionButton(
         backgroundColor: const Color(0xFF0F172A),
         onPressed: () async {
           // open add record screeen
