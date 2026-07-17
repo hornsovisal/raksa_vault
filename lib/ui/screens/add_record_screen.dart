@@ -3,68 +3,89 @@ import '../../main.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_button.dart';
 
+// all record category
 enum RecordCategory {
   passwords(displayName: 'Passwords', dbValue: 'Login'),
   bankAccounts(displayName: 'Bank Accounts', dbValue: 'Identity'),
   cards(displayName: 'Cards', dbValue: 'Card');
 
+  // name show to user
   final String displayName;
+
+  // value save to database
   final String dbValue;
 
   const RecordCategory({required this.displayName, required this.dbValue});
 }
 
 class AddRecordScreen extends StatefulWidget {
+  // current user id
   final String userId;
+
   const AddRecordScreen({super.key, required this.userId});
 
   @override
-  State<AddRecordScreen> createState() => _AddRecordScreenState();
+  State<AddRecordScreen> createState() {
+    return AddRecordScreenState();
+  }
 }
 
-class _AddRecordScreenState extends State<AddRecordScreen> {
-  RecordCategory _selectedCategory = RecordCategory.passwords;
-  bool _obscureSensitive = true;
+class AddRecordScreenState extends State<AddRecordScreen> {
+  // default category
+  RecordCategory selectedCategory = RecordCategory.passwords;
 
-  final _titleController = TextEditingController();
-  final _sensitiveController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  // true mean hide secret
+  // false mean show secret
+  bool isHidden = true;
+
+  // get value from input
+  final titleController = TextEditingController();
+  final secretController = TextEditingController();
+  final descriptionController = TextEditingController();
 
   @override
   void dispose() {
-    _titleController.dispose();
-    _sensitiveController.dispose();
-    _descriptionController.dispose();
+    // clear controller when screen close
+    titleController.dispose();
+    secretController.dispose();
+    descriptionController.dispose();
+
     super.dispose();
   }
 
-  Future<void> _saveRecord() async {
-    final title = _titleController.text.trim();
-    final secretValue = _sensitiveController.text.trim();
-    final description = _descriptionController.text.trim();
+  // save new record
+  Future<void> saveRecord() async {
+    // get input value
+    final title = titleController.text.trim();
+    final secretValue = secretController.text.trim();
+    final description = descriptionController.text.trim();
 
+    // check title is empty
     if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a record title')),
       );
+
       return;
     }
 
     try {
-      //add item to our db
+      // add record to database
       await vaultRepository.addItem(
         userId: widget.userId,
         title: title,
-        category: _selectedCategory.dbValue,
+        category: selectedCategory.dbValue,
         secretValue: secretValue,
         description: description,
         isFavorite: false,
       );
 
+      // go back and refresh dashbord
       if (mounted) {
         Navigator.pop(context, true);
       }
     } catch (e) {
+      // show error when save fail
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to save to database: $e')),
@@ -77,10 +98,14 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+
+      // top bar
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.primary),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
         title: Text(
           'Add New Record',
@@ -93,180 +118,230 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
         elevation: 0,
         centerTitle: false,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildLabel('Category'),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: DropdownButtonHideUnderline(
-                  // 4. Update Dropdown to use RecordCategory type
-                  child: DropdownButton<RecordCategory>(
-                    value: _selectedCategory,
-                    isExpanded: true,
-                    icon: const Icon(
-                      Icons.keyboard_arrow_down,
-                      color: AppColors.textMuted,
-                    ),
-                    // Map over the enum values automatically
-                    items: RecordCategory.values.map((RecordCategory category) {
-                      return DropdownMenuItem<RecordCategory>(
-                        value: category,
-                        child: Text(
-                          category.displayName,
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.textDark,
+
+      // listview make screen can scroll
+      body: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          // main form box
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // category input
+                buildLabel('Category'),
+
+                const SizedBox(height: 8),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<RecordCategory>(
+                      value: selectedCategory,
+                      isExpanded: true,
+                      icon: const Icon(
+                        Icons.keyboard_arrow_down,
+                        color: AppColors.textMuted,
+                      ),
+
+                      // make dropdown from enum
+                      items: RecordCategory.values.map((category) {
+                        return DropdownMenuItem<RecordCategory>(
+                          value: category,
+                          child: Text(
+                            category.displayName,
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textDark,
+                            ),
                           ),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (newValue) {
-                      if (newValue != null) {
-                        setState(() => _selectedCategory = newValue);
-                      }
-                    },
+                        );
+                      }).toList(),
+
+                      // change category
+                      onChanged: (newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            selectedCategory = newValue;
+                          });
+                        }
+                      },
+                    ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 24),
-              _buildLabel('Record Title'),
-              const SizedBox(height: 8),
-              _buildTextField(
-                'Enter title (e.g. Netflix Primary)',
-                controller: _titleController,
-              ),
+                const SizedBox(height: 24),
 
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildLabel('Sensitive Information'),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _obscureSensitive = !_obscureSensitive;
-                      });
-                    },
-                    child: Row(
-                      children: [
-                        Icon(
-                          _obscureSensitive
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          size: 14,
-                          color: AppColors.primary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _obscureSensitive ? 'Show' : 'Hide',
-                          style: AppTextStyles.label.copyWith(
-                            fontWeight: FontWeight.bold,
+                // title input
+                buildLabel('Record Title'),
+
+                const SizedBox(height: 8),
+
+                buildTextField(
+                  'Enter title (e.g. Netflix Primary)',
+                  controller: titleController,
+                ),
+
+                const SizedBox(height: 24),
+
+                // secret label and show hide button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    buildLabel('Sensitive Information'),
+
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          // change hide and show
+                          isHidden = !isHidden;
+                        });
+                      },
+                      child: Row(
+                        children: [
+                          Icon(
+                            isHidden
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            size: 14,
                             color: AppColors.primary,
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Container(
-                height: 120,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Stack(
-                  children: [
-                    TextField(
-                      controller: _sensitiveController,
-                      maxLines: _obscureSensitive ? 1 : null,
-                      obscureText: _obscureSensitive,
-                      decoration: InputDecoration.collapsed(
-                        hintText:
-                            'Paste password, key, or\nsensitive text here...',
-                        hintStyle: AppTextStyles.body.copyWith(
-                          color: AppColors.textMuted,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                      style: AppTextStyles.body.copyWith(
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.content_paste,
-                          size: 16,
-                          color: AppColors.primary,
-                        ),
+
+                          const SizedBox(width: 4),
+
+                          Text(
+                            isHidden ? 'Show' : 'Hide',
+                            style: AppTextStyles.label.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
 
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  const Icon(Icons.sort, size: 14, color: AppColors.textMuted),
-                  const SizedBox(width: 4),
-                  _buildLabel('Description (Optional)'),
-                ],
-              ),
-              const SizedBox(height: 8),
-              _buildTextField(
-                'Add any notes here...',
-                controller: _descriptionController,
-              ),
+                const SizedBox(height: 8),
 
-              const SizedBox(height: 32),
-              CustomButton(
-                text: 'Save Record',
-                backgroundColor: AppColors.textDark,
-                onPressed: _saveRecord,
-              ),
-              const SizedBox(height: 12),
-              CustomButton(
-                text: 'Cancel',
-                backgroundColor: Colors.transparent,
-                textColor: AppColors.textMuted,
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
+                // secret input box
+                Container(
+                  height: 120,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Stack(
+                    children: [
+                      TextField(
+                        controller: secretController,
+
+                        // one line when secret hide
+                        maxLines: isHidden ? 1 : null,
+
+                        // hide or show secret text
+                        obscureText: isHidden,
+
+                        decoration: InputDecoration.collapsed(
+                          hintText:
+                              'Paste password, key, or\nsensitive text here...',
+                          hintStyle: AppTextStyles.body.copyWith(
+                            color: AppColors.textMuted,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                        style: AppTextStyles.body.copyWith(
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+
+                      // paste icon
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.content_paste,
+                            size: 16,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // description input
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.sort,
+                      size: 14,
+                      color: AppColors.textMuted,
+                    ),
+
+                    const SizedBox(width: 4),
+
+                    buildLabel('Description (Optional)'),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                buildTextField(
+                  'Add any notes here...',
+                  controller: descriptionController,
+                ),
+
+                const SizedBox(height: 32),
+
+                // save button
+                CustomButton(
+                  text: 'Save Record',
+                  backgroundColor: AppColors.textDark,
+                  onPressed: saveRecord,
+                ),
+
+                const SizedBox(height: 12),
+
+                // cancel button
+                CustomButton(
+                  text: 'Cancel',
+                  backgroundColor: Colors.transparent,
+                  textColor: AppColors.textMuted,
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildLabel(String text) {
+  // make label text
+  Widget buildLabel(String text) {
     return Text(
       text,
       style: AppTextStyles.label.copyWith(
@@ -276,7 +351,8 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
     );
   }
 
-  Widget _buildTextField(
+  // make normal input box
+  Widget buildTextField(
     String hint, {
     required TextEditingController controller,
   }) {
