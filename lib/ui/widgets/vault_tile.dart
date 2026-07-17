@@ -20,7 +20,7 @@ class VaultTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.only(bottom: 10),
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
@@ -29,26 +29,26 @@ class VaultTile extends StatelessWidget {
         leading: Container(
           width: 48,
           height: 48,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          alignment: Alignment.center,
           child:
               leadingIcon ??
               const Icon(Icons.lock_outline, color: AppColors.primary),
         ),
         title: Text(
           title,
-          style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
+          style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(color: AppColors.textMuted),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: AppColors.textMuted),
         ),
         trailing:
             trailing ??

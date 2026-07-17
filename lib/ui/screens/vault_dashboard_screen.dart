@@ -3,6 +3,7 @@ import 'package:raksa_vault/ui/screens/add_record_screen.dart';
 import 'package:raksa_vault/ui/screens/record_detail_screen.dart';
 import 'package:raksa_vault/ui/theme/app_theme.dart';
 import 'package:raksa_vault/ui/widgets/custom_bottom_nav.dart';
+import 'package:raksa_vault/ui/widgets/vault_tile.dart';
 
 import '../../data/database/app_database.dart';
 import '../../data/repositories/vault_repository.dart';
@@ -20,336 +21,444 @@ class VaultDashboardScreen extends StatefulWidget {
   });
 
   @override
-  State<VaultDashboardScreen> createState() => _VaultDashboardScreenState();
+  State<VaultDashboardScreen> createState() {
+    return VaultDashboardScreenState();
+  }
 }
 
-class _VaultDashboardScreenState extends State<VaultDashboardScreen> {
-  late Future<List<VaultItem>> _vaultItems;
-  int _selectedIndex = 0;
-  String _selectedCategory = "All";
+class VaultDashboardScreenState extends State<VaultDashboardScreen> {
+  // future use for get all vault item
+  late Future<List<VaultItem>> vaultItems;
 
-  final FirebaseAuthService _authService = FirebaseAuthService();
+  // null mean user select all category
+  RecordCategory? selectedCategory;
+
+  // use for bottom nav current index
+  int selectedIndex = 0;
+
+  // firebase auth use to get current user
+  final FirebaseAuthService authService = FirebaseAuthService();
 
   @override
   void initState() {
     super.initState();
-    _loadVaultItems();
+
+    // load all record when dashbord open
+    loadVaultItems();
   }
 
-  void _loadVaultItems() {
-    _vaultItems = widget.repository.getAllItems(widget.userId);
+  // get all item from database
+  void loadVaultItems() {
+    vaultItems = widget.repository.getAllItems(widget.userId);
   }
 
-  Future<void> _refresh() async {
+  // refresh item after add edit or delet
+  Future<void> refreshItems() async {
     setState(() {
-      _loadVaultItems();
+      loadVaultItems();
     });
+
+    await vaultItems;
   }
 
-  IconData _getCategoryIcon(String category) {
-    switch (category.toLowerCase()) {
-      case "login":
-        return Icons.login;
-      case "card":
+  // convert category db value to enum
+  RecordCategory? getRecordCategory(String dbValue) {
+    for (final category in RecordCategory.values) {
+      if (category.dbValue == dbValue) {
+        return category;
+      }
+    }
+
+    // return null if category not found
+    return null;
+  }
+
+  // get icon base on enum category
+  IconData getCategoryIcon(RecordCategory? category) {
+    switch (category) {
+      case RecordCategory.passwords:
+        return Icons.key;
+
+      case RecordCategory.bankAccounts:
+        return Icons.account_balance;
+
+      case RecordCategory.cards:
         return Icons.credit_card;
-      case "note":
-        return Icons.note;
-      case "identity":
-        return Icons.person;
-      default:
+
+      case null:
         return Icons.lock;
     }
   }
 
+  // get category nice name for show in ui
+  String getCategoryDisplayName(String dbValue) {
+    final category = getRecordCategory(dbValue);
+
+    // if category found show display name
+    // if not found show old db value
+    return category?.displayName ?? dbValue;
+  }
+
+  // find latest record update time
+  String getLastUpdated(List<VaultItem> items) {
+    // no item mean no update time
+    if (items.isEmpty) {
+      return '-';
+    }
+
+    // copy list so we dont change orginal list
+    final sortedItems = List<VaultItem>.from(items);
+
+    // sort newest item to first
+    sortedItems.sort((first, second) {
+      return second.updatedAt.compareTo(first.updatedAt);
+    });
+
+    final latestDate = sortedItems.first.updatedAt;
+    final difference = DateTime.now().difference(latestDate);
+
+    // update less than 1 minute
+    if (difference.inMinutes < 1) {
+      return 'Now';
+    }
+
+    // update less than 1 hour
+    if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m';
+    }
+
+    // update less than 1 day
+    if (difference.inHours < 24) {
+      return '${difference.inHours}h';
+    }
+
+    // update more than 1 day
+    return '${difference.inDays}d';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = _authService.currentUser;
+    // get current login user
+    final user = authService.currentUser;
+
+    // use User if full name not found
+    final userName = user?.fullName ?? 'User';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FE),
+
+      // top app bar
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 0,
-        automaticallyImplyLeading: false, // Removes the back button
-        title: Row(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Good Morning, ${user?.fullName}", // Dynamic Greeting
-                  style: const TextStyle(
-                    color: AppColors.textDark,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Text(
-                  "Welcome back to Raksa Vault",
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 11),
-                ),
-              ],
+            Text(
+              'Good Morning, $userName',
+              style: const TextStyle(
+                color: AppColors.textDark,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Text(
+              'Welcome back to Raksa Vault',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 11),
             ),
           ],
         ),
         actions: [
           IconButton(
+            onPressed: () {
+              // notifcation action later
+            },
             icon: const Icon(
               Icons.notifications_none,
               color: AppColors.textDark,
             ),
-            onPressed: () {},
           ),
         ],
       ),
+
+      // wait database item load
       body: FutureBuilder<List<VaultItem>>(
-        future: _vaultItems,
+        future: vaultItems,
         builder: (context, snapshot) {
+          // show loading while wait data
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
+          // show error if load item fail
           if (snapshot.hasError) {
-            return Center(child: Text(snapshot.error.toString()));
+            return Center(
+              child: Text(
+                'Error: ${snapshot.error}',
+                textAlign: TextAlign.center,
+              ),
+            );
           }
 
+          // get item or empty list
           final items = snapshot.data ?? [];
 
-          // Calculate Statistics
+          // count total record
           final totalRecords = items.length;
-          final totalCategories = items.map((e) => e.category).toSet().length;
-          String lastUpdated = "-";
 
-          if (items.isNotEmpty) {
-            final latest = items.first;
-            final diff = DateTime.now().difference(latest.updatedAt);
+          // count category that have record
+          final totalCategories = items
+              .map((item) {
+                return getRecordCategory(item.category);
+              })
+              .whereType<RecordCategory>()
+              .toSet()
+              .length;
 
-            if (diff.inMinutes < 60) {
-              lastUpdated = "${diff.inMinutes}m";
-            } else if (diff.inHours < 24) {
-              lastUpdated = "${diff.inHours}h";
-            } else {
-              lastUpdated = "${diff.inDays}d";
-            }
+          // get latest update time
+          final lastUpdated = getLastUpdated(items);
+
+          // item after category filter
+          final List<VaultItem> filteredItems;
+
+          // null mean show all record
+          if (selectedCategory == null) {
+            filteredItems = items;
+          } else {
+            // filter record by category user select
+            filteredItems = items.where((item) {
+              return item.category == selectedCategory!.dbValue;
+            }).toList();
           }
 
-          // Build dynamic unique categories list from items
-          final categories = ["All", ...items.map((e) => e.category).toSet()];
-
-          final filteredItems = _selectedCategory == "All"
-              ? items
-              : items.where((e) => e.category == _selectedCategory).toList();
-
           return RefreshIndicator(
-            onRefresh: _refresh,
+            // pull down to refresh record
+            onRefresh: refreshItems,
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                // Stat Cards Row
+                // dashbord summary card
                 Row(
                   children: [
                     Expanded(
                       child: StatCard(
-                        title: "Records",
+                        title: 'Records',
                         value: totalRecords.toString(),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: StatCard(
-                        title: "Categories",
+                        title: 'Categories',
                         value: totalCategories.toString(),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: StatCard(title: "Last Used", value: lastUpdated),
+                      child: StatCard(title: 'Last Used', value: lastUpdated),
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 24),
 
-                // Category Text Header
+                // category title
                 const Text(
-                  "Categories",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-
-                // Horizontal Dynamic Filter Chips
-                SizedBox(
-                  height: 42,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: categories.length,
-                    itemBuilder: (context, index) {
-                      final category = categories[index];
-                      final isSelected = _selectedCategory == category;
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedCategory = category;
-                          });
-                        },
-                        child: _buildChip(category, isSelected),
-                      );
-                    },
+                  'Categories',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
                   ),
                 ),
+
+                const SizedBox(height: 10),
+
+                // horizontal category filter
+                SizedBox(
+                  height: 45,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      // all category button
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: const Text('All'),
+
+                          // null mean all category selected
+                          selected: selectedCategory == null,
+
+                          selectedColor: const Color(0xFF0F172A),
+                          backgroundColor: const Color(0xFFE2E8F0),
+
+                          labelStyle: TextStyle(
+                            color: selectedCategory == null
+                                ? Colors.white
+                                : const Color(0xFF64748B),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+
+                          onSelected: (_) {
+                            setState(() {
+                              // select all category
+                              selectedCategory = null;
+                            });
+                          },
+                        ),
+                      ),
+
+                      // create chip from enum category
+                      ...RecordCategory.values.map((category) {
+                        final isSelected = selectedCategory == category;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            // category icon
+                            avatar: Icon(
+                              getCategoryIcon(category),
+                              size: 16,
+                              color: isSelected
+                                  ? Colors.white
+                                  : const Color(0xFF64748B),
+                            ),
+
+                            // show enum display name
+                            label: Text(category.displayName),
+
+                            selected: isSelected,
+                            selectedColor: const Color(0xFF0F172A),
+                            backgroundColor: const Color(0xFFE2E8F0),
+
+                            labelStyle: TextStyle(
+                              color: isSelected
+                                  ? Colors.white
+                                  : const Color(0xFF64748B),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+
+                            onSelected: (_) {
+                              setState(() {
+                                // save category user select
+                                selectedCategory = category;
+                              });
+                            },
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+
                 const SizedBox(height: 24),
 
-                // Recent Items Header
+                // recent item title
                 const Text(
-                  "Recent Items",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  'Recent Items',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
+                  ),
                 ),
+
                 const SizedBox(height: 12),
 
+                // show empty ui if no item found
                 if (filteredItems.isEmpty)
                   const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 40),
-                    child: Center(
-                      child: Text(
-                        "No vault items found.",
-                        style: TextStyle(fontSize: 15, color: Colors.grey),
-                      ),
+                    padding: EdgeInsets.symmetric(vertical: 50),
+                    child: Column(
+                      children: [
+                        Icon(Icons.folder_open, size: 60, color: Colors.grey),
+                        SizedBox(height: 10),
+                        Text(
+                          'No vault items found',
+                          style: TextStyle(color: Colors.grey, fontSize: 15),
+                        ),
+                      ],
                     ),
                   )
                 else
-                  ...filteredItems.map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: GestureDetector(
-                        onTap: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => RecordDetailScreen(
+                  // loop all filter item and make tile
+                  ...filteredItems.map((item) {
+                    // convert item db category to enum
+                    final category = getRecordCategory(item.category);
+
+                    return VaultTile(
+                      title: item.title,
+
+                      // show category if description empty
+                      subtitle: item.description.isEmpty
+                          ? getCategoryDisplayName(item.category)
+                          : item.description,
+
+                      // show icon base on category
+                      leadingIcon: Icon(
+                        getCategoryIcon(category),
+                        color: AppColors.primary,
+                      ),
+
+                      onTap: () async {
+                        // open record detail screeen
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return RecordDetailScreen(
                                 item: item,
                                 repository: widget.repository,
-                              ),
-                            ),
-                          );
-                          _refresh();
-                        },
-                        child: _buildListItem(item),
-                      ),
-                    ),
-                  ),
+                              );
+                            },
+                          ),
+                        );
+
+                        // refresh if record edit or delet
+                        await refreshItems();
+                      },
+                    );
+                  }),
               ],
             ),
           );
         },
       ),
+
+      // add new record button
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF0F172A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         onPressed: () async {
+          // open add record screeen
           final result = await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => AddRecordScreen(userId: widget.userId),
+              builder: (context) {
+                return AddRecordScreen(userId: widget.userId);
+              },
             ),
           );
+
+          // refresh after new record save
           if (result == true) {
-            await _refresh();
+            await refreshItems();
           }
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
+
+      // custom bottom navigation
       bottomNavigationBar: CustomBottomNav(
-        currentIndex: _selectedIndex,
+        currentIndex: selectedIndex,
         onTap: (index) {
           setState(() {
-            _selectedIndex = index;
+            // change selected nav index
+            selectedIndex = index;
           });
         },
-      ),
-    );
-  }
-
-  // Helper method representing custom design of chips
-  Widget _buildChip(String label, bool isSelected) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Center(
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : const Color(0xFF64748B),
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Helper method representing custom design of list item
-  Widget _buildListItem(VaultItem record) {
-    IconData icon = _getCategoryIcon(record.category);
-    Color bgColor;
-    Color iconColor;
-
-    if (record.category.toLowerCase().contains('bank') ||
-        record.category.toLowerCase().contains('card')) {
-      bgColor = const Color(0xFFD1FAE5);
-      iconColor = const Color(0xFF059669);
-    } else {
-      bgColor = const Color(0xFFEFF6FF);
-      iconColor = const Color(0xFF1E3A8A);
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: iconColor, size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  record.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: Color(0xFF1E293B),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  record.description.isEmpty ? "••••••••" : record.description,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF64748B),
-                    fontFamily: 'monospace',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Icon(Icons.more_vert, color: Colors.grey),
-        ],
       ),
     );
   }
