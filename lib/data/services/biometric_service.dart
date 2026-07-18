@@ -4,48 +4,69 @@ import 'package:local_auth_android/local_auth_android.dart';
 import 'package:local_auth_darwin/local_auth_darwin.dart';
 
 class BiometricService {
-  //local auth from library to do biometric auth
-  final _auth = LocalAuthentication();
+  // use device face authentication
+  final LocalAuthentication auth = LocalAuthentication();
 
-  /// Checks if Face ID is set up on the device
+  // check if face authentication is enrolled
   Future<bool> hasFaceAuth() async {
     try {
-      final hasBio = await _auth.canCheckBiometrics;
-      if (!hasBio) return false;
+      final biometrics = await auth.getAvailableBiometrics();
 
-      final enrolled = await _auth.getAvailableBiometrics();
-      //return if it can do face service or not
-      return enrolled.contains(BiometricType.face);
+      return biometrics.contains(BiometricType.face);
     } on PlatformException {
       return false;
     }
   }
 
-  /// cal the face authentication prompt
-  Future<bool> authenticate({required String reason}) async {
+  // open face authentication prompt
+  Future<bool> authenticateFace({
+    String reason = 'Scan your face to unlock this record',
+  }) async {
     try {
-      final isReady = await hasFaceAuth();
-      if (!isReady) return false;
+      final faceAvailable = await hasFaceAuth();
 
-      return await _auth.authenticate(
+      // no face enrolled on device
+      if (!faceAvailable) {
+        return false;
+      }
+
+      return await auth.authenticate(
         localizedReason: reason,
         options: const AuthenticationOptions(
+          // dont allow device pin or password
           biometricOnly: true,
+
+          // continue authentication after app background
           stickyAuth: true,
+
+          // show system error dialog
           useErrorDialogs: true,
         ),
         authMessages: const [
-          //android message
           AndroidAuthMessages(
-            signInTitle: 'Face Authentication Required',
-            cancelButton: 'Use PIN',
+            signInTitle: 'Face Authentication',
+            biometricHint: 'Scan your face',
+            biometricNotRecognized: 'Face not recognized',
+            biometricRequiredTitle: 'Face authentication required',
+            cancelButton: 'Use Vault PIN',
           ),
-          //ios message
-          IOSAuthMessages(cancelButton: 'Use PIN'),
+          IOSAuthMessages(
+            cancelButton: 'Use Vault PIN',
+            lockOut: 'Face ID is locked. Unlock your iPhone and try again.',
+          ),
         ],
       );
     } on PlatformException {
       return false;
+    }
+  }
+
+  // close current face scan
+  Future<void> stopAuthentication() async {
+    try {
+      await auth.stopAuthentication();
+    } on PlatformException {
+      // no action needed
     }
   }
 }
