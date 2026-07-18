@@ -14,7 +14,7 @@ class BiometricService {
       if (!hasBio) return false;
 
       final enrolled = await _auth.getAvailableBiometrics();
-      //return if it can face or not
+      //return if it can do face service or not
       return enrolled.contains(BiometricType.face);
     } on PlatformException {
       return false;

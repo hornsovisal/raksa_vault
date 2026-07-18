@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:raksa_vault/models/record_category.dart';
 import 'package:raksa_vault/ui/screens/add_record_screen.dart';
 import 'package:raksa_vault/ui/screens/category_screen.dart';
 import 'package:raksa_vault/ui/screens/record_detail_screen.dart';
@@ -44,7 +45,7 @@ class VaultDashboardScreenState extends State<VaultDashboardScreen> {
   void initState() {
     super.initState();
 
-    // load all record when dashbord open
+    // load all record when dashboard open
     loadVaultItems();
   }
 
@@ -53,7 +54,7 @@ class VaultDashboardScreenState extends State<VaultDashboardScreen> {
     vaultItems = widget.repository.getAllItems(widget.userId);
   }
 
-  // refresh item after add edit or delet
+  // refresh item after add edit or delete
   Future<void> refreshItems() async {
     setState(() {
       loadVaultItems();
@@ -62,42 +63,54 @@ class VaultDashboardScreenState extends State<VaultDashboardScreen> {
     await vaultItems;
   }
 
-  // convert category db value to enum
-  RecordCategory? getRecordCategory(String dbValue) {
-    for (final category in RecordCategory.values) {
-      if (category.dbValue == dbValue) {
-        return category;
-      }
-    }
-
-    // return null if category not found
-    return null;
+  // get category enum from sqlite value
+  RecordCategory getRecordCategory(String dbValue) {
+    return RecordCategory.fromDbValue(dbValue);
   }
 
-  // get icon base on enum category
-  IconData getCategoryIcon(RecordCategory? category) {
+  // get icon base on category enum
+  IconData getCategoryIcon(RecordCategory category) {
     switch (category) {
       case RecordCategory.passwords:
-        return Icons.key;
+        return Icons.key_outlined;
 
       case RecordCategory.bankAccounts:
-        return Icons.account_balance;
+        return Icons.account_balance_outlined;
 
       case RecordCategory.cards:
-        return Icons.credit_card;
+        return Icons.credit_card_outlined;
 
-      case null:
-        return Icons.lock;
+      case RecordCategory.notes:
+        return Icons.note_outlined;
+
+      case RecordCategory.other:
+        return Icons.folder_outlined;
+    }
+  }
+
+  // get color base on category
+  Color getCategoryColor(RecordCategory category) {
+    switch (category) {
+      case RecordCategory.passwords:
+        return AppColors.tertiary;
+
+      case RecordCategory.bankAccounts:
+        return AppColors.secondary;
+
+      case RecordCategory.cards:
+        return AppColors.primary;
+
+      case RecordCategory.notes:
+        return AppColors.textMuted;
+
+      case RecordCategory.other:
+        return AppColors.error;
     }
   }
 
   // get category nice name for show in ui
   String getCategoryDisplayName(String dbValue) {
-    final category = getRecordCategory(dbValue);
-
-    // if category found show display name
-    // if not found show old db value
-    return category?.displayName ?? dbValue;
+    return getRecordCategory(dbValue).displayName;
   }
 
   // find latest record update time
@@ -107,7 +120,7 @@ class VaultDashboardScreenState extends State<VaultDashboardScreen> {
       return '-';
     }
 
-    // copy list so we dont change orginal list
+    // copy list so we dont change original list
     final sortedItems = List<VaultItem>.from(items);
 
     // sort newest item to first
@@ -135,6 +148,30 @@ class VaultDashboardScreenState extends State<VaultDashboardScreen> {
 
     // update more than 1 day
     return '${difference.inDays}d';
+  }
+
+  // count category that really have record
+  int getTotalCategories(List<VaultItem> items) {
+    return items
+        .map((item) {
+          return getRecordCategory(item.category);
+        })
+        .toSet()
+        .length;
+  }
+
+  // filter item by selected category
+  List<VaultItem> getFilteredItems(List<VaultItem> items) {
+    // null mean show all record
+    if (selectedCategory == null) {
+      return items;
+    }
+
+    return items.where((item) {
+      final itemCategory = getRecordCategory(item.category);
+
+      return itemCategory == selectedCategory;
+    }).toList();
   }
 
   @override
@@ -173,7 +210,7 @@ class VaultDashboardScreenState extends State<VaultDashboardScreen> {
         actions: [
           IconButton(
             onPressed: () {
-              // notifcation action later
+              // notification action later
             },
             icon: const Icon(
               Icons.notifications_none,
@@ -183,277 +220,326 @@ class VaultDashboardScreenState extends State<VaultDashboardScreen> {
         ],
       ),
 
-      // wait database item load
+      // change screen base on bottom nav
       body: selectedIndex == 2
-          ? const CategoryScreen()
+          ? CategoryScreen(userId: widget.userId, repository: widget.repository)
           : selectedIndex != 0
-              ? const Center(child: Text("Under Construction"))
-              : FutureBuilder<List<VaultItem>>(
-        future: vaultItems,
-        builder: (context, snapshot) {
-          // show loading while wait data
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          ? const Center(child: Text('Under Construction'))
+          : FutureBuilder<List<VaultItem>>(
+              future: vaultItems,
+              builder: (context, snapshot) {
+                // show loading while wait data
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          // show error if load item fail
-          if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                'Error: ${snapshot.error}',
-                textAlign: TextAlign.center,
-              ),
-            );
-          }
-
-          // get item or empty list
-          final items = snapshot.data ?? [];
-
-          // count total record
-          final totalRecords = items.length;
-
-          // count category that have record
-          final totalCategories = items
-              .map((item) {
-                return getRecordCategory(item.category);
-              })
-              .whereType<RecordCategory>()
-              .toSet()
-              .length;
-
-          // get latest update time
-          final lastUpdated = getLastUpdated(items);
-
-          // item after category filter
-          final List<VaultItem> filteredItems;
-
-          // null mean show all record
-          if (selectedCategory == null) {
-            filteredItems = items;
-          } else {
-            // filter record by category user select
-            filteredItems = items.where((item) {
-              return item.category == selectedCategory!.dbValue;
-            }).toList();
-          }
-
-          return RefreshIndicator(
-            // pull down to refresh record
-            onRefresh: refreshItems,
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                // dashbord summary card
-                Row(
-                  children: [
-                    Expanded(
-                      child: StatCard(
-                        title: 'Records',
-                        value: totalRecords.toString(),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: StatCard(
-                        title: 'Categories',
-                        value: totalCategories.toString(),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: StatCard(title: 'Last Used', value: lastUpdated),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // category title
-                const Text(
-                  'Categories',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textDark,
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                // horizontal category filter
-                SizedBox(
-                  height: 45,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      // all category button
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          label: const Text('All'),
-
-                          // null mean all category selected
-                          selected: selectedCategory == null,
-
-                          selectedColor: const Color(0xFF0F172A),
-                          backgroundColor: const Color(0xFFE2E8F0),
-
-                          labelStyle: TextStyle(
-                            color: selectedCategory == null
-                                ? Colors.white
-                                : const Color(0xFF64748B),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
+                // show error if load item fail
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            size: 50,
+                            color: AppColors.error,
                           ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Failed to load vault records',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textDark,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${snapshot.error}',
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.label.copyWith(
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: refreshItems,
+                            child: const Text('Try Again'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
 
-                          onSelected: (_) {
-                            setState(() {
-                              // select all category
-                              selectedCategory = null;
-                            });
-                          },
+                // get item or empty list
+                final items = snapshot.data ?? [];
+
+                // count total record
+                final totalRecords = items.length;
+
+                // count category that really have record
+                final totalCategories = getTotalCategories(items);
+
+                // get latest update time
+                final lastUpdated = getLastUpdated(items);
+
+                // filter item by selected category
+                final filteredItems = getFilteredItems(items);
+
+                return RefreshIndicator(
+                  // pull down to refresh record
+                  onRefresh: refreshItems,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      // dashboard summary card
+                      Row(
+                        children: [
+                          Expanded(
+                            child: StatCard(
+                              title: 'Records',
+                              value: totalRecords.toString(),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: StatCard(
+                              title: 'Categories',
+                              value: totalCategories.toString(),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: StatCard(
+                              title: 'Last Used',
+                              value: lastUpdated,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // category title
+                      const Text(
+                        'Categories',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textDark,
                         ),
                       ),
 
-                      // create chip from enum category
-                      ...RecordCategory.values.map((category) {
-                        final isSelected = selectedCategory == category;
+                      const SizedBox(height: 10),
 
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            // category icon
-                            avatar: Icon(
-                              getCategoryIcon(category),
-                              size: 16,
-                              color: isSelected
-                                  ? Colors.white
-                                  : const Color(0xFF64748B),
+                      // horizontal category filter
+                      SizedBox(
+                        height: 45,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          children: [
+                            // all category button
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                avatar: Icon(
+                                  Icons.apps,
+                                  size: 16,
+                                  color: selectedCategory == null
+                                      ? Colors.white
+                                      : const Color(0xFF64748B),
+                                ),
+                                label: const Text('All'),
+
+                                // null mean all category selected
+                                selected: selectedCategory == null,
+
+                                selectedColor: const Color(0xFF0F172A),
+                                backgroundColor: const Color(0xFFE2E8F0),
+
+                                labelStyle: TextStyle(
+                                  color: selectedCategory == null
+                                      ? Colors.white
+                                      : const Color(0xFF64748B),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
+
+                                onSelected: (_) {
+                                  setState(() {
+                                    selectedCategory = null;
+                                  });
+                                },
+                              ),
                             ),
 
-                            // show enum display name
-                            label: Text(category.displayName),
+                            // create chip from enum category
+                            ...RecordCategory.values.map((category) {
+                              final isSelected = selectedCategory == category;
 
-                            selected: isSelected,
-                            selectedColor: const Color(0xFF0F172A),
-                            backgroundColor: const Color(0xFFE2E8F0),
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: ChoiceChip(
+                                  // category icon
+                                  avatar: Icon(
+                                    getCategoryIcon(category),
+                                    size: 16,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : getCategoryColor(category),
+                                  ),
 
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : const Color(0xFF64748B),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
+                                  // show enum display name
+                                  label: Text(category.displayName),
+
+                                  selected: isSelected,
+                                  selectedColor: const Color(0xFF0F172A),
+                                  backgroundColor: const Color(0xFFE2E8F0),
+
+                                  labelStyle: TextStyle(
+                                    color: isSelected
+                                        ? Colors.white
+                                        : const Color(0xFF64748B),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
+
+                                  onSelected: (_) {
+                                    setState(() {
+                                      // select category
+                                      selectedCategory = category;
+                                    });
+                                  },
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // recent item title and item count
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Recent Items',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textDark,
                             ),
-
-                            onSelected: (_) {
-                              setState(() {
-                                // save category user select
-                                selectedCategory = category;
-                              });
-                            },
                           ),
-                        );
-                      }),
+                          Text(
+                            '${filteredItems.length} ${filteredItems.length == 1 ? 'Item' : 'Items'}',
+                            style: AppTextStyles.label.copyWith(
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // show empty ui if no item found
+                      if (filteredItems.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 50),
+                          child: Column(
+                            children: [
+                              Icon(
+                                selectedCategory == null
+                                    ? Icons.folder_open_outlined
+                                    : getCategoryIcon(selectedCategory!),
+                                size: 60,
+                                color: AppColors.textMuted,
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                selectedCategory == null
+                                    ? 'No vault items found'
+                                    : 'No ${selectedCategory!.displayName.toLowerCase()} found',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: AppColors.textMuted,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        // loop all filtered item and make tile
+                        ...filteredItems.map((item) {
+                          // convert sqlite category to enum
+                          final category = getRecordCategory(item.category);
+
+                          return VaultTile(
+                            title: item.title,
+
+                            // show category if description empty
+                            subtitle: item.description.trim().isEmpty
+                                ? category.displayName
+                                : item.description,
+
+                            // show icon base on category
+                            leadingIcon: Icon(
+                              getCategoryIcon(category),
+                              color: getCategoryColor(category),
+                            ),
+
+                            onTap: () async {
+                              // open record detail screen
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) {
+                                    return RecordDetailScreen(
+                                      item: item,
+                                      repository: widget.repository,
+                                    );
+                                  },
+                                ),
+                              );
+
+                              // refresh if record edit or delete
+                              await refreshItems();
+                            },
+                          );
+                        }),
                     ],
                   ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // recent item title
-                const Text(
-                  'Recent Items',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textDark,
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // show empty ui if no item found
-                if (filteredItems.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 50),
-                    child: Column(
-                      children: [
-                        Icon(Icons.folder_open, size: 60, color: Colors.grey),
-                        SizedBox(height: 10),
-                        Text(
-                          'No vault items found',
-                          style: TextStyle(color: Colors.grey, fontSize: 15),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  // loop all filter item and make tile
-                  ...filteredItems.map((item) {
-                    // convert item db category to enum
-                    final category = getRecordCategory(item.category);
-
-                    return VaultTile(
-                      title: item.title,
-
-                      // show category if description empty
-                      subtitle: item.description.isEmpty
-                          ? getCategoryDisplayName(item.category)
-                          : item.description,
-
-                      // show icon base on category
-                      leadingIcon: Icon(
-                        getCategoryIcon(category),
-                        color: AppColors.primary,
-                      ),
-
-                      onTap: () async {
-                        // open record detail screeen
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) {
-                              return RecordDetailScreen(
-                                item: item,
-                                repository: widget.repository,
-                              );
-                            },
-                          ),
-                        );
-
-                        // refresh if record edit or delet
-                        await refreshItems();
-                      },
-                    );
-                  }),
-              ],
-            ),
-          );
-        },
-      ),
-
-      // add new record button
-      floatingActionButton: selectedIndex != 0 ? null : FloatingActionButton(
-        backgroundColor: const Color(0xFF0F172A),
-        onPressed: () async {
-          // open add record screeen
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) {
-                return AddRecordScreen(userId: widget.userId);
+                );
               },
             ),
-          );
 
-          // refresh after new record save
-          if (result == true) {
-            await refreshItems();
-          }
-        },
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+      // add new record button
+      floatingActionButton: selectedIndex != 0
+          ? null
+          : FloatingActionButton(
+              backgroundColor: const Color(0xFF0F172A),
+              onPressed: () async {
+                // open add record screen
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return AddRecordScreen(userId: widget.userId);
+                    },
+                  ),
+                );
+
+                // refresh after new record save
+                if (result == true) {
+                  await refreshItems();
+                }
+              },
+              child: const Icon(Icons.add, color: Colors.white),
+            ),
 
       // custom bottom navigation
       bottomNavigationBar: CustomBottomNav(

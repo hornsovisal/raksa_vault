@@ -106,7 +106,7 @@ class _PinPadState extends State<PinPad> {
     );
   }
 
-  // Builds the number pad using basic Rows and Columns
+  // Builds the number pad
   Widget _buildNumberPad() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -142,7 +142,6 @@ class _PinPadState extends State<PinPad> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              // Use a SizedBox to leave an empty space in the bottom left corner
               const SizedBox(width: 64, height: 64),
               _buildNumberButton('0'),
               _buildDeleteButton(), // Delete button at bottom right
@@ -153,7 +152,7 @@ class _PinPadState extends State<PinPad> {
     );
   }
 
-  // Reusable number button widget
+  // number button widget
   Widget _buildNumberButton(String number) {
     return TextButton(
       onPressed: () => _onNumberPressed(number),

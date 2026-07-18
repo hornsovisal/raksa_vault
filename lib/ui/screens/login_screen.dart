@@ -98,19 +98,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     label: 'Password',
                     hint: '••••••••',
                     isPassword: true,
-                    trailing: GestureDetector(
-                      onTap: () {
-                        // TODO: Implement forgot password
-                      },
-                      child: const Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
                   ),
                   const SizedBox(height: 24),
                   CustomButton(
