@@ -7,6 +7,7 @@ import '../../data/repositories/vault_repository.dart';
 import '../../data/services/pin_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pin_pad.dart';
+import 'face_scan_screen.dart';
 
 class RecordDetailScreen extends StatefulWidget {
   final VaultItem item;
@@ -25,11 +26,74 @@ class RecordDetailScreen extends StatefulWidget {
 }
 
 class RecordDetailScreenState extends State<RecordDetailScreen> {
-  // false mean user still need verify pin
+  // false mean user still need face or pin verify
   bool isVerified = false;
+
+  // stop face screen open more than one time
+  bool faceScanOpened = false;
 
   // show pin error message
   String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // call face scan first after screen open
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      openFaceScanFirst();
+    });
+  }
+
+  // open face authentication first
+  Future<void> openFaceScanFirst() async {
+    // dont open face screen more than one time automatically
+    if (faceScanOpened || isVerified || !mounted) {
+      return;
+    }
+
+    faceScanOpened = true;
+
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) {
+          return const FaceScanScreen();
+        },
+      ),
+    );
+
+    // face authentication success
+    if (result == true) {
+      setState(() {
+        isVerified = true;
+        errorMessage = null;
+      });
+    }
+
+    // false or null mean show pin screen
+  }
+
+  // manually open face scan again
+  Future<void> retryFaceScan() async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) {
+          return const FaceScanScreen();
+        },
+      ),
+    );
+
+    if (result == true) {
+      setState(() {
+        isVerified = true;
+        errorMessage = null;
+      });
+    }
+  }
 
   // change database category string to enum
   RecordCategory getCategory() {
@@ -87,7 +151,7 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
                   // delete record from sqlite
                   await widget.repository.deleteItem(widget.item.id);
 
-                  // go back and tell dashboard to refresh
+                  // go back and tell dashboard to refresh by return true
                   if (mounted) {
                     Navigator.pop(context, true);
                   }
@@ -117,10 +181,6 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
   // check pin user entered
   Future<void> handlePinEntered(String pin) async {
     final isValid = await PinService().verifyPin(pin);
-
-    if (!mounted) {
-      return;
-    }
 
     if (isValid) {
       setState(() {
@@ -177,12 +237,50 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
               const SizedBox(height: 8),
 
               const Text(
-                'Enter your PIN to view the record details',
+                'Use face authentication or enter your PIN',
                 textAlign: TextAlign.center,
                 style: AppTextStyles.body,
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
+
+              // retry face authentication
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: retryFaceScan,
+                  icon: const Icon(Icons.face_retouching_natural),
+                  label: const Text('Scan Face'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              Row(
+                children: [
+                  const Expanded(child: Divider(color: AppColors.border)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'or use PIN',
+                      style: AppTextStyles.label.copyWith(
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ),
+                  const Expanded(child: Divider(color: AppColors.border)),
+                ],
+              ),
+
+              const SizedBox(height: 24),
 
               PinPad(
                 pinLength: 6,
@@ -208,11 +306,7 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
           // category
           buildDetailItem(
             label: 'Category',
-
-            // show nice enum name
             value: category.displayName,
-
-            // show correct category icon
             icon: getCategoryIcon(category),
           ),
 
@@ -346,7 +440,7 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
           },
         ),
         title: Text(
-          isVerified ? widget.item.title : 'Verify PIN',
+          isVerified ? widget.item.title : 'Verify Identity',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: AppTextStyles.subtitle.copyWith(
