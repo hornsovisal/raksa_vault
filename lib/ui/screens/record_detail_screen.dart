@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:raksa_vault/models/record_category.dart';
 
 import '../../data/database/app_database.dart';
 import '../../data/repositories/vault_repository.dart';
@@ -18,14 +19,44 @@ class RecordDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<RecordDetailScreen> createState() => RecordDetailScreenState();
+  State<RecordDetailScreen> createState() {
+    return RecordDetailScreenState();
+  }
 }
 
 class RecordDetailScreenState extends State<RecordDetailScreen> {
+  // false mean user still need verify pin
   bool isVerified = false;
+
+  // show pin error message
   String? errorMessage;
 
-  // Show confirm dialog before deleting the record
+  // change database category string to enum
+  RecordCategory getCategory() {
+    return RecordCategory.fromDbValue(widget.item.category);
+  }
+
+  // get icon based on category
+  IconData getCategoryIcon(RecordCategory category) {
+    switch (category) {
+      case RecordCategory.passwords:
+        return Icons.key_outlined;
+
+      case RecordCategory.bankAccounts:
+        return Icons.account_balance_outlined;
+
+      case RecordCategory.cards:
+        return Icons.credit_card_outlined;
+
+      case RecordCategory.notes:
+        return Icons.note_outlined;
+
+      case RecordCategory.other:
+        return Icons.folder_outlined;
+    }
+  }
+
+  // show confirm dialog before delete
   void confirmDelete() {
     showDialog(
       context: context,
@@ -49,12 +80,24 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
             ),
             TextButton(
               onPressed: () async {
+                // close dialog
                 Navigator.pop(dialogContext);
 
-                await widget.repository.deleteItem(widget.item.id);
+                try {
+                  // delete record from sqlite
+                  await widget.repository.deleteItem(widget.item.id);
 
-                if (mounted) {
-                  Navigator.pop(context, true);
+                  // go back and tell dashboard to refresh
+                  if (mounted) {
+                    Navigator.pop(context, true);
+                  }
+                } catch (e) {
+                  // show error if delete fail
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to delete record: $e')),
+                    );
+                  }
                 }
               },
               child: const Text(
@@ -71,7 +114,7 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
     );
   }
 
-  // Check the PIN entered by the user
+  // check pin user entered
   Future<void> handlePinEntered(String pin) async {
     final isValid = await PinService().verifyPin(pin);
 
@@ -91,7 +134,20 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
     }
   }
 
-  // PIN verification widget
+  // copy text to clipboard
+  Future<void> copyToClipboard(String value) async {
+    await Clipboard.setData(ClipboardData(text: value));
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Copied to clipboard')));
+  }
+
+  // pin verification ui
   Widget buildPinVerification() {
     return SafeArea(
       child: Center(
@@ -113,15 +169,21 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
                   color: AppColors.primary,
                 ),
               ),
+
               const SizedBox(height: 20),
+
               const Text('Protected Record', style: AppTextStyles.title),
+
               const SizedBox(height: 8),
+
               const Text(
                 'Enter your PIN to view the record details',
                 textAlign: TextAlign.center,
                 style: AppTextStyles.body,
               ),
+
               const SizedBox(height: 32),
+
               PinPad(
                 pinLength: 6,
                 onPinEntered: handlePinEntered,
@@ -134,34 +196,53 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
     );
   }
 
-  // Record details widget
+  // record details ui
   Widget buildDetails() {
+    // convert sqlite category value to enum
+    final category = getCategory();
+
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(24),
         children: [
+          // category
           buildDetailItem(
             label: 'Category',
-            value: widget.item.category,
-            icon: Icons.category_outlined,
+
+            // show nice enum name
+            value: category.displayName,
+
+            // show correct category icon
+            icon: getCategoryIcon(category),
           ),
+
           const SizedBox(height: 20),
+
+          // record title
           buildDetailItem(
             label: 'Title',
             value: widget.item.title,
             icon: Icons.title,
           ),
+
           const SizedBox(height: 20),
+
+          // secret value
           buildDetailItem(
             label: 'Sensitive Information',
-            value: widget.item.secretValue,
+            value: widget.item.secretValue.trim().isEmpty
+                ? 'No sensitive information'
+                : widget.item.secretValue,
             icon: Icons.shield_outlined,
             isSensitive: true,
           ),
+
           const SizedBox(height: 20),
+
+          // description
           buildDetailItem(
             label: 'Description (Notes)',
-            value: widget.item.description.isEmpty
+            value: widget.item.description.trim().isEmpty
                 ? 'No additional notes'
                 : widget.item.description,
             icon: Icons.notes_outlined,
@@ -171,7 +252,7 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
     );
   }
 
-  // Reusable detail item widget
+  // reusable detail card
   Widget buildDetailItem({
     required String label,
     required String value,
@@ -183,9 +264,14 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
       children: [
         Text(
           label,
-          style: AppTextStyles.label.copyWith(fontWeight: FontWeight.w700),
+          style: AppTextStyles.label.copyWith(
+            fontWeight: FontWeight.w700,
+            color: AppColors.textDark,
+          ),
         ),
+
         const SizedBox(height: 8),
+
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
@@ -195,7 +281,9 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
             border: Border.all(color: AppColors.border),
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // field icon
               Container(
                 width: 42,
                 height: 42,
@@ -205,9 +293,12 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
                 ),
                 child: Icon(icon, size: 21, color: AppColors.primary),
               ),
+
               const SizedBox(width: 14),
+
+              // field value
               Expanded(
-                child: Text(
+                child: SelectableText(
                   value,
                   style: AppTextStyles.body.copyWith(
                     color: AppColors.textDark,
@@ -219,7 +310,9 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
                   ),
                 ),
               ),
-              if (isSensitive)
+
+              // copy secret button
+              if (isSensitive && widget.item.secretValue.trim().isNotEmpty)
                 IconButton(
                   tooltip: 'Copy',
                   icon: const Icon(
@@ -228,13 +321,7 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
                     color: AppColors.primary,
                   ),
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: value));
-
-                    ScaffoldMessenger.of(context)
-                      ..hideCurrentSnackBar()
-                      ..showSnackBar(
-                        const SnackBar(content: Text('Copied to clipboard')),
-                      );
+                    copyToClipboard(widget.item.secretValue);
                   },
                 ),
             ],
@@ -244,11 +331,14 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
     );
   }
 
-  // Main screen widget
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
+
       appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.primary),
           onPressed: () {
@@ -257,6 +347,8 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
         ),
         title: Text(
           isVerified ? widget.item.title : 'Verify PIN',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: AppTextStyles.subtitle.copyWith(
             color: AppColors.primary,
             fontWeight: FontWeight.w700,
@@ -275,6 +367,7 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
               ]
             : null,
       ),
+
       body: isVerified ? buildDetails() : buildPinVerification(),
     );
   }
