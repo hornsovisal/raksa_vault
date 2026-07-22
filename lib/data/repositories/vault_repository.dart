@@ -1,5 +1,4 @@
 // VaultRepository we use to fetch the vault from our sqlite database
-
 import 'package:drift/drift.dart';
 import 'package:raksa_vault/models/record_category.dart';
 

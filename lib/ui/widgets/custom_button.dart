@@ -1,23 +1,21 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
 
 class CustomButton extends StatelessWidget {
-  // These are the properties our custom button can accept.
-  // Making a reusable widget like this keeps our code clean and our UI consistent across the app.
+  // Properties for the reusable custom button.
   final String text;
-  final VoidCallback? onPressed; // Nullable so the button can be disabled
-  final bool outlined; // Switches between an ElevatedButton and OutlinedButton
-  final bool isLoading; // Shows a loading spinner when true
-  final IconData? icon; // Optional icon to display next to the text
+  final VoidCallback? onPressed; 
+  final bool isLoading; 
+  final bool isOutlined; 
+  final IconData? icon; 
   final Color? backgroundColor;
   final Color? textColor;
 
   const CustomButton({
     super.key,
     required this.text,
-    this.onPressed,
-    this.outlined = false,
+    required this.onPressed,
     this.isLoading = false,
+    this.isOutlined = false,
     this.icon,
     this.backgroundColor,
     this.textColor,
@@ -25,73 +23,57 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Outlined Button
-    if (outlined) {
-      return SizedBox(
-        width: double.infinity,
-        height: 48,
-        child: OutlinedButton(
-          onPressed: isLoading ? null : onPressed,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: textColor ?? AppColors.primary,
-            side: const BorderSide(color: AppColors.border),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          child: _buildChild(textColor ?? AppColors.primary),
-        ),
-      );
-    }
-
-    // Filled Button
     return SizedBox(
       width: double.infinity,
-      height: 48,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor ?? AppColors.primary,
-          foregroundColor: textColor ?? Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: _buildChild(textColor ?? Colors.white),
-      ),
+      height: 50,
+      child: isOutlined
+          ? OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                backgroundColor: backgroundColor,
+                foregroundColor: textColor,
+              ),
+              onPressed: isLoading ? null : onPressed,
+              child: _buildChild(),
+            )
+          : ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: backgroundColor,
+                foregroundColor: textColor,
+              ),
+              onPressed: isLoading ? null : onPressed,
+              child: _buildChild(),
+            ),
     );
   }
 
-  Widget _buildChild(Color progressColor) {
+  Widget _buildChild() {
     if (isLoading) {
-      return SizedBox(
-        width: 20,
-        height: 20,
-        child: CircularProgressIndicator.adaptive(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-        ),
-      );
+      return const CircularProgressIndicator.adaptive();
     }
-
     if (icon != null) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             text,
-            style: AppTextStyles.button.copyWith(color: progressColor),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
           ),
           const SizedBox(width: 8),
-          Icon(icon, size: 20, color: progressColor),
+          Icon(icon, size: 20, color: textColor),
         ],
       );
     }
-
     return Text(
       text,
-      style: AppTextStyles.button.copyWith(color: progressColor),
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: textColor,
+      ),
     );
   }
 }

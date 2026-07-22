@@ -261,7 +261,7 @@ class FaceScanScreenState extends State<FaceScanScreen> {
               // go back and use vault pin
               CustomButton(
                 text: 'Use PIN Instead',
-                outlined: true,
+                isOutlined: true,
                 onPressed: () {
                   Navigator.pop(context, false);
                 },

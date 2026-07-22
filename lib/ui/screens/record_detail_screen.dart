@@ -7,6 +7,7 @@ import '../../data/repositories/vault_repository.dart';
 import '../../data/services/pin_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pin_pad.dart';
+import 'add_record_screen.dart';
 import 'face_scan_screen.dart';
 
 class RecordDetailScreen extends StatefulWidget {
@@ -450,6 +451,25 @@ class RecordDetailScreenState extends State<RecordDetailScreen> {
         ),
         actions: isVerified
             ? [
+                IconButton(
+                  icon: const Icon(Icons.edit, color: AppColors.primary),
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AddRecordScreen(
+                          userId: widget.item.userId,
+                          existingItem: widget.item,
+                        ),
+                      ),
+                    );
+                    if (result == true) {
+                      if (!mounted) return;
+                      // Pop back to dashboard and pass true to trigger a refresh
+                      Navigator.pop(context, true);
+                    }
+                  },
+                ),
                 IconButton(
                   tooltip: 'Delete record',
                   icon: const Icon(

@@ -3,6 +3,7 @@ import 'package:raksa_vault/data/services/pin_service.dart';
 import 'package:raksa_vault/ui/theme/app_theme.dart';
 import 'package:raksa_vault/ui/widgets/custom_button.dart';
 import 'package:raksa_vault/ui/widgets/pin_pad.dart';
+import 'package:raksa_vault/data/services/biometric_service.dart';
 
 import '../../main.dart';
 
@@ -17,6 +18,7 @@ class SetupPinScreenState extends State<SetupPinScreen> {
   String? errorMsg;
   String enteredPin = '';
   final pinService = PinService();
+  final biometricService = BiometricService();
   bool isLoading = false;
 
   void handlePinChanged(String pin) {
@@ -71,6 +73,18 @@ class SetupPinScreenState extends State<SetupPinScreen> {
         ],
       ),
     );
+
+    if (!mounted) return;
+
+    // Check if device supports face scan
+    final supportsFace = await biometricService.hasFaceAuth();
+    if (supportsFace && mounted) {
+      // Navigate to FaceScanScreen
+      final result = await Navigator.pushNamed(context, '/face_scan');
+      if (result == true) {
+        // Face scanned successfully
+      }
+    }
 
     if (!mounted) return;
 
@@ -130,95 +144,7 @@ class SetupPinScreenState extends State<SetupPinScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // Biometrics Card
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF6EE7B7), // Light green
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Biometric Check',
-                        style: AppTextStyles.headline.copyWith(fontSize: 16),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF059669),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Text(
-                            'BIOMETRICS AVAILABLE',
-                            style: TextStyle(
-                              color: Color(0xFF059669),
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.0,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      CustomButton(
-                        text: 'Enable Biometrics',
-                        backgroundColor: const Color(
-                          0xFF0F172A,
-                        ), // Very dark blue
-                        onPressed: () {
-                          // Biometrics not fully implemented in this demo, just visually there
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // OR Divider
-                Row(
-                  children: [
-                    Expanded(child: Divider(color: Colors.grey[300])),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'OR',
-                        style: TextStyle(
-                          color: Colors.grey[400],
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Expanded(child: Divider(color: Colors.grey[300])),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
 
                 // Setup PIN Card
                 Container(

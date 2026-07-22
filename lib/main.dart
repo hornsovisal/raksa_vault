@@ -17,6 +17,7 @@ import 'data/services/pin_service.dart';
 import 'ui/screens/vault_dashboard_screen.dart';
 import 'ui/screens/login_screen.dart';
 import 'ui/screens/register_screen.dart';
+import 'ui/screens/face_scan_screen.dart';
 
 late final AppDatabase database;
 late final VaultRepository vaultRepository;
@@ -56,6 +57,7 @@ class RaksaVaultApp extends StatelessWidget {
         '/unlock': (context) => const UnlockScreen(),
         '/setup_pin': (context) => const SetupPinScreen(),
         '/setup_success': (context) => const SetupSuccessScreen(),
+        '/face_scan': (context) => const FaceScanScreen(),
       },
       builder: (context, child) {
         return ResponsiveBreakpoints.builder(
