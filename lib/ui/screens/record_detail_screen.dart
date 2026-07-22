@@ -4,6 +4,7 @@ import '../../data/repositories/vault_repository.dart';
 import '../../data/services/pin_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pin_pad.dart';
+import 'add_record_screen.dart';
 
 class RecordDetailScreen extends StatefulWidget {
   final VaultItem item;
@@ -21,48 +22,20 @@ class RecordDetailScreen extends StatefulWidget {
 
 class _RecordDetailScreenState extends State<RecordDetailScreen> {
   bool _isVerified = false;
-  String? errorMessage;
+  String? _errorMsg;
 
-  void _confirmDelete() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Record'),
-        content: const Text('Are you sure you want to delete this record? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context); // close dialog
-              await widget.repository.deleteItem(widget.item.id);
-              if (mounted) {
-                Navigator.pop(context, true); // go back to dashboard
-              }
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  //handle the enter of pin
   void _handlePinEntered(String pin) async {
-    //verify the pin
     final isValid = await PinService().verifyPin(pin);
+    if (!mounted) return;
 
-    //if it valid , return true , if no show error message
     if (isValid) {
       setState(() {
         _isVerified = true;
-        errorMessage = null;
+        _errorMsg = null;
       });
     } else {
       setState(() {
-        errorMessage = 'Incorrect PIN';
+        _errorMsg = 'Incorrect PIN';
       });
     }
   }
@@ -83,17 +56,32 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
             color: const Color(0xFF1E3A8A),
           ),
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: false,
         actions: _isVerified
             ? [
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: _confirmDelete,
-                ),
+                  icon: const Icon(Icons.edit, color: Color(0xFF1E3A8A)),
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AddRecordScreen(
+                          userId: widget.item.userId,
+                          existingItem: widget.item,
+                        ),
+                      ),
+                    );
+                    if (result == true) {
+                      if (!mounted) return;
+                      // Pop back to dashboard and pass true to trigger a refresh
+                      Navigator.pop(context, true);
+                    }
+                  },
+                )
               ]
             : null,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
       ),
       body: _isVerified ? _buildDetails() : _buildPinVerification(),
     );
@@ -114,7 +102,7 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
           PinPad(
             pinLength: 6,
             onPinEntered: _handlePinEntered,
-            errorText: errorMessage,
+            errorText: _errorMsg,
           ),
           const SizedBox(height: 64),
         ],
@@ -134,7 +122,9 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
           const SizedBox(height: 24),
           _buildDetailItem(
             'Sensitive Information',
-            widget.item.secretValue,
+            widget
+                .item
+                .secretValue, 
             isSensitive: true,
           ),
           const SizedBox(height: 24),
@@ -172,7 +162,7 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -195,6 +185,7 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
                     color: Color(0xFF1E3A8A),
                   ),
                   onPressed: () {
+                    // Quick convenience copy logic
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Copied to clipboard')),
                     );

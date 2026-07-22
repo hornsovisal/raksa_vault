@@ -1,10 +1,8 @@
-//VaultRepository we use to fetchc the valut from our sqlite database
-
 import 'package:drift/drift.dart';
 
 import '../database/app_database.dart';
 
-//this is to do operation on valut, valut will talk with db
+//this is to do operation on valut, valut will talkwith db
 class VaultRepository {
   final AppDatabase database;
 

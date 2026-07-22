@@ -139,7 +139,7 @@ class _FaceScanScreenState extends State<FaceScanScreen> {
               const SizedBox(height: 16),
               CustomButton(
                 text: 'Cancel',
-                outlined: true,
+                isOutlined: true,
                 onPressed: () => Navigator.pop(context, false),
               ),
               const SizedBox(height: 16),

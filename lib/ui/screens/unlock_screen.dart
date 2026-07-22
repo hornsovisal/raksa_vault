@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'face_scan_screen.dart';
 import '../widgets/pin_pad.dart';
 import '../theme/app_theme.dart';
+import '../../data/services/biometric_service.dart';
 import '../../data/services/pin_service.dart';
-
-import '../widgets/custom_button.dart';
-
 import '../../main.dart';
 
+/// The main Unlock Screen for the application.
+/// Shows a polished layout with the PinPad for user authentication.
 class UnlockScreen extends StatefulWidget {
   const UnlockScreen({super.key});
 
@@ -17,62 +16,54 @@ class UnlockScreen extends StatefulWidget {
 
 class _UnlockScreenState extends State<UnlockScreen> {
   String? _errorMsg;
+  final _biometricService = BiometricService();
   final _pinService = PinService();
-  bool _hasAttemptedAutoBiometric = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_hasAttemptedAutoBiometric) {
-        _hasAttemptedAutoBiometric = true;
-        _attemptBiometricUnlock();
-      }
+      _tryFaceUnlock();
     });
   }
 
-  Future<void> _attemptBiometricUnlock() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const FaceScanScreen()),
-    );
-    
-    if (result == true) {
-      final pin = await _pinService.getPinForBiometric();
-      if (!mounted) return;
-      if (pin != null) {
-        initializeEncryptedDatabase(pin);
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/dashboard',
-          (route) => route.isFirst,
-        );
-      } else {
-        setState(() {
-          _errorMsg = 'Failed to retrieve PIN for biometrics.';
-        });
+  Future<void> _tryFaceUnlock() async {
+    final supportsFace = await _biometricService.hasFaceAuth();
+    if (supportsFace && mounted) {
+      final success = await _biometricService.authenticate(
+        reason: 'Please authenticate to unlock Raksa Vault',
+      );
+      if (success && mounted) {
+        final savedPin = await _pinService.getPinForBiometric();
+        if (savedPin != null) {
+          initializeEncryptedDatabase(savedPin);
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, '/dashboard');
+          }
+        } else {
+          setState(() {
+            _errorMsg = 'Could not retrieve PIN for face unlock. Please enter PIN.';
+          });
+        }
       }
     }
   }
 
-  void _handlePinEntered(String pin) async {
-    final isValid = await _pinService.verifyPin(pin);
-    if (isValid) {
+  // Handles logic when the full PIN is entered
+  Future<void> _handlePinEntered(String pin) async {
+    final isCorrect = await _pinService.verifyPin(pin);
+    if (isCorrect) {
       if (!mounted) return;
       setState(() {
         _errorMsg = null;
       });
-
-      //init our db with pin , no pin = cannot access
       initializeEncryptedDatabase(pin);
 
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        '/dashboard',
-        (route) => route.isFirst,
-      );
+      // Navigate to the Dashboard upon successful unlock
+      Navigator.pushReplacementNamed(context, '/dashboard');
     } else {
       if (!mounted) return;
+      // Show an error if the PIN is incorrect
       setState(() {
         _errorMsg = 'Incorrect PIN. Please try again.';
       });
@@ -82,93 +73,73 @@ class _UnlockScreenState extends State<UnlockScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FE),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textDark),
-          onPressed: () => Navigator.pop(context),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(height: 32),
-              Text(
-                'Raksa Vault',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.headline.copyWith(
-                  fontSize: 28,
-                  color: const Color(0xFF1E3A8A),
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 48.0,
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Secure your sensitive information',
-                style: TextStyle(color: AppColors.textBody, fontSize: 14),
-              ),
-              const SizedBox(height: 48),
-
-              // Avatar Placeholder
-              Container(
-                width: 96,
-                height: 96,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFEFF6FF), // very light blue
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              CustomButton(
-                text: 'Unlock with Biometrics',
-                backgroundColor: const Color(0xFF1E3A8A), // dark blue
-                onPressed: _attemptBiometricUnlock,
-              ),
-              const SizedBox(height: 12),
-
-              const Text(
-                'Use fingerprint or Face ID',
-                style: TextStyle(
-                  color: AppColors.textBody,
-                  fontSize: 12,
-                  fontFamily: 'monospace',
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // OR Divider
-              Row(
-                children: [
-                  Expanded(child: Divider(color: Colors.grey[300])),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'OR',
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Padlock icon representing security
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: AppColors.card,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Image.asset(
+                        'assets/images/reaksa-logo.png',
+                        width: 64,
+                        height: 64,
                       ),
                     ),
-                  ),
-                  Expanded(child: Divider(color: Colors.grey[300])),
-                ],
-              ),
-              const SizedBox(height: 32),
 
-              PinPad(
-                pinLength: 6,
-                onPinEntered: _handlePinEntered,
-                errorText: _errorMsg,
+                    const SizedBox(height: 32),
+
+                    // Title text
+                    Text(
+                      'Welcome to Raksa Vault',
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.headline.copyWith(fontSize: 28),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Subtitle text
+                    const Text(
+                      'Enter your 6-digit PIN to continue',
+                      style: TextStyle(color: AppColors.textBody, fontSize: 16),
+                    ),
+
+                    const Spacer(),
+
+                    // The custom PinPad widget
+                    PinPad(
+                      pinLength: 6,
+                      onPinEntered: _handlePinEntered,
+                      errorText: _errorMsg,
+                    ),
+
+                    const Spacer(),
+                  ],
+                ),
               ),
-              const SizedBox(height: 32),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -21,8 +21,9 @@ enum RecordCategory {
 class AddRecordScreen extends StatefulWidget {
   // current user id
   final String userId;
+  final VaultItem? existingItem;
 
-  const AddRecordScreen({super.key, required this.userId});
+  const AddRecordScreen({super.key, required this.userId, this.existingItem});
 
   @override
   State<AddRecordScreen> createState() {
@@ -79,6 +80,22 @@ class AddRecordScreenState extends State<AddRecordScreen> {
   final descriptionController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.existingItem != null) {
+      titleController.text = widget.existingItem!.title;
+      secretController.text = widget.existingItem!.secretValue;
+      descriptionController.text = widget.existingItem!.description;
+      try {
+        selectedCategory = RecordCategory.values.firstWhere(
+            (e) => e.dbValue == widget.existingItem!.category);
+      } catch (e) {
+        selectedCategory = RecordCategory.passwords;
+      }
+    }
+  }
+
+  @override
   void dispose() {
     // clear controller when screen close
     titleController.dispose();
@@ -105,15 +122,27 @@ class AddRecordScreenState extends State<AddRecordScreen> {
     }
 
     try {
-      // add record to database
-      await vaultRepository.addItem(
-        userId: widget.userId,
-        title: title,
-        category: selectedCategory.dbValue,
-        secretValue: secretValue,
-        description: description,
-        isFavorite: false,
-      );
+      if (widget.existingItem != null) {
+        // update existing record
+        await vaultRepository.updateItem(
+          oldItem: widget.existingItem!,
+          title: title,
+          category: selectedCategory.dbValue,
+          secretValue: secretValue,
+          description: description,
+          isFavorite: widget.existingItem!.isFavorite,
+        );
+      } else {
+        // add record to database
+        await vaultRepository.addItem(
+          userId: widget.userId,
+          title: title,
+          category: selectedCategory.dbValue,
+          secretValue: secretValue,
+          description: description,
+          isFavorite: false,
+        );
+      }
 
       // go back and refresh dashbord
       if (mounted) {
@@ -143,7 +172,7 @@ class AddRecordScreenState extends State<AddRecordScreen> {
           },
         ),
         title: Text(
-          'Add New Record',
+          widget.existingItem != null ? 'Edit Record' : 'Add New Record',
           style: AppTextStyles.headline.copyWith(
             fontSize: 18,
             color: AppColors.tertiary,
@@ -350,7 +379,7 @@ class AddRecordScreenState extends State<AddRecordScreen> {
 
                 // save button
                 CustomButton(
-                  text: 'Save Record',
+                  text: widget.existingItem != null ? 'Update Record' : 'Save Record',
                   backgroundColor: AppColors.textDark,
                   onPressed: saveRecord,
                 ),

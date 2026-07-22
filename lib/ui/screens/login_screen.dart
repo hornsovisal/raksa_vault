@@ -3,6 +3,7 @@ import '../../data/repositories/auth_repository.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_textfield.dart';
 import '../widgets/custom_button.dart';
+import '../../main.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -133,7 +134,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               );
 
                               if (!context.mounted) return;
-                              Navigator.pushNamed(context, '/unlock');
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const AuthGate(),
+                                ),
+                                (route) => false,
+                              );
                             } catch (e) {
                               if (!context.mounted) return;
 

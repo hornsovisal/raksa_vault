@@ -117,7 +117,7 @@ class WelcomeScreen extends StatelessWidget {
               const SizedBox(height: 16),
               CustomButton(
                 text: 'Login',
-                outlined: true,
+                isOutlined: true,
                 onPressed: () => _goToLogin(context),
               ),
               const SizedBox(height: 32),
