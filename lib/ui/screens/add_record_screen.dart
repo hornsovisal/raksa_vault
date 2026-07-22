@@ -1,22 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:raksa_vault/models/record_category.dart';
+
 import '../../main.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_button.dart';
-
-// all record category
-enum RecordCategory {
-  passwords(displayName: 'Passwords', dbValue: 'Login'),
-  bankAccounts(displayName: 'Bank Accounts', dbValue: 'Identity'),
-  cards(displayName: 'Cards', dbValue: 'Card');
-
-  // name show to user
-  final String displayName;
-
-  // value save to database
-  final String dbValue;
-
-  const RecordCategory({required this.displayName, required this.dbValue});
-}
 
 class AddRecordScreen extends StatefulWidget {
   // current user id
@@ -32,6 +19,18 @@ class AddRecordScreen extends StatefulWidget {
 }
 
 class AddRecordScreenState extends State<AddRecordScreen> {
+  // default category
+  RecordCategory selectedCategory = RecordCategory.passwords;
+
+  // true mean hide secret
+  // false mean show secret
+  bool isHidden = true;
+
+  // get value from input
+  final titleController = TextEditingController();
+  final secretController = TextEditingController();
+  final descriptionController = TextEditingController();
+
   // make label text
   Widget buildLabel(String text) {
     return Text(
@@ -66,18 +65,6 @@ class AddRecordScreenState extends State<AddRecordScreen> {
       ),
     );
   }
-
-  // default category
-  RecordCategory selectedCategory = RecordCategory.passwords;
-
-  // true mean hide secret
-  // false mean show secret
-  bool isHidden = true;
-
-  // get value from input
-  final titleController = TextEditingController();
-  final secretController = TextEditingController();
-  final descriptionController = TextEditingController();
 
   @override
   void initState() {
@@ -127,7 +114,7 @@ class AddRecordScreenState extends State<AddRecordScreen> {
         await vaultRepository.updateItem(
           oldItem: widget.existingItem!,
           title: title,
-          category: selectedCategory.dbValue,
+          category: selectedCategory,
           secretValue: secretValue,
           description: description,
           isFavorite: widget.existingItem!.isFavorite,
@@ -137,14 +124,14 @@ class AddRecordScreenState extends State<AddRecordScreen> {
         await vaultRepository.addItem(
           userId: widget.userId,
           title: title,
-          category: selectedCategory.dbValue,
+          category: selectedCategory,
           secretValue: secretValue,
           description: description,
           isFavorite: false,
         );
       }
 
-      // go back and refresh dashbord
+      // go back and refresh dashboard
       if (mounted) {
         Navigator.pop(context, true);
       }
@@ -222,11 +209,23 @@ class AddRecordScreenState extends State<AddRecordScreen> {
                       items: RecordCategory.values.map((category) {
                         return DropdownMenuItem<RecordCategory>(
                           value: category,
-                          child: Text(
-                            category.displayName,
-                            style: AppTextStyles.body.copyWith(
-                              color: AppColors.textDark,
-                            ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                category.icon,
+                                size: 20,
+                                color: AppColors.primary,
+                              ),
+
+                              const SizedBox(width: 10),
+
+                              Text(
+                                category.displayName,
+                                style: AppTextStyles.body.copyWith(
+                                  color: AppColors.textDark,
+                                ),
+                              ),
+                            ],
                           ),
                         );
                       }).toList(),
@@ -250,10 +249,7 @@ class AddRecordScreenState extends State<AddRecordScreen> {
 
                 const SizedBox(height: 8),
 
-                buildTextField(
-                  'Enter title (e.g. Netflix Primary)',
-                  controller: titleController,
-                ),
+                buildTextField(getTitleHint(), controller: titleController),
 
                 const SizedBox(height: 24),
 
@@ -261,7 +257,7 @@ class AddRecordScreenState extends State<AddRecordScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    buildLabel('Sensitive Information'),
+                    buildLabel(getSensitiveLabel()),
 
                     GestureDetector(
                       onTap: () {
@@ -318,8 +314,7 @@ class AddRecordScreenState extends State<AddRecordScreen> {
                         obscureText: isHidden,
 
                         decoration: InputDecoration.collapsed(
-                          hintText:
-                              'Paste password, key, or\nsensitive text here...',
+                          hintText: getSecretHint(),
                           hintStyle: AppTextStyles.body.copyWith(
                             color: AppColors.textMuted,
                             fontFamily: 'monospace',
@@ -401,5 +396,65 @@ class AddRecordScreenState extends State<AddRecordScreen> {
         ],
       ),
     );
+  }
+
+  // title example change by category
+  String getTitleHint() {
+    switch (selectedCategory) {
+      case RecordCategory.passwords:
+        return 'Enter title (e.g. Netflix Primary)';
+
+      case RecordCategory.bankAccounts:
+        return 'Enter title (e.g. ABA Bank Account)';
+
+      case RecordCategory.cards:
+        return 'Enter title (e.g. Visa Card)';
+
+      case RecordCategory.notes:
+        return 'Enter title (e.g. Private Note)';
+
+      case RecordCategory.other:
+        return 'Enter record title';
+    }
+  }
+
+  // label change by category
+  String getSensitiveLabel() {
+    switch (selectedCategory) {
+      case RecordCategory.passwords:
+        return 'Password or Login Information';
+
+      case RecordCategory.bankAccounts:
+        return 'Bank Account Information';
+
+      case RecordCategory.cards:
+        return 'Card Information';
+
+      case RecordCategory.notes:
+        return 'Private Note';
+
+      case RecordCategory.other:
+        return 'Sensitive Information';
+    }
+  }
+
+  // secret input hint change by category
+  String getSecretHint() {
+    switch (selectedCategory) {
+      case RecordCategory.passwords:
+        return 'Paste username, password, or\nlogin information here...';
+
+      case RecordCategory.bankAccounts:
+        return 'Paste account number, account name,\nor bank information here...';
+
+      case RecordCategory.cards:
+        return 'Paste card number, expiry date,\nor card information here...';
+
+      case RecordCategory.notes:
+        return 'Write your private note here...';
+
+      case RecordCategory.other:
+        return 'Paste key, code, or\nsensitive text here...';
+    }
   }
 }

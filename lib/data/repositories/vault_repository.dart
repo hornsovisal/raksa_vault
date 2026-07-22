@@ -1,35 +1,39 @@
+// VaultRepository we use to fetch the vault from our sqlite database
 import 'package:drift/drift.dart';
+import 'package:raksa_vault/models/record_category.dart';
 
 import '../database/app_database.dart';
 
-//this is to do operation on valut, valut will talkwith db
+// this is to do operation on vault, vault will talk with db
 class VaultRepository {
   final AppDatabase database;
 
   VaultRepository(this.database);
 
-  //get all item form dababase
+  // get all item from database
   Future<List<VaultItem>> getAllItems(String userId) {
     return database.getVaultItemsByUser(userId);
   }
 
-  //add item , but before add compare it first , if it have in DB or not
+  // add item to database
   Future<int> addItem({
     required String userId,
     required String title,
-    required String category,
+    required RecordCategory category,
     required String secretValue,
     required String description,
     required bool isFavorite,
   }) {
-    //take now as the create at
+    // take current time as create time
     final now = DateTime.now();
 
-    //compare it
     final item = VaultItemsCompanion(
       userId: Value(userId),
       title: Value(title),
-      category: Value(category),
+
+      // enum change to string before save in sqlite
+      category: Value(category.dbValue),
+
       secretValue: Value(secretValue),
       description: Value(description),
       isFavorite: Value(isFavorite),
@@ -40,35 +44,37 @@ class VaultRepository {
     return database.insertVaultItem(item);
   }
 
-  //update item
-
+  // update item
   Future<bool> updateItem({
     required VaultItem oldItem,
     required String title,
-    required String category,
+    required RecordCategory category,
     required String secretValue,
     required String description,
     required bool isFavorite,
   }) {
-    //update it , copy with will change only update paramaneter
+    // copy old item and change only new values
     final updatedItem = oldItem.copyWith(
       title: title,
-      category: category,
+
+      // enum change to string before save
+      category: category.dbValue,
+
       secretValue: secretValue,
       description: description,
       isFavorite: isFavorite,
       updatedAt: DateTime.now(),
     );
-    //give db to update
+
     return database.updateVaultItem(updatedItem);
   }
 
-  //delete by ID
+  // delete item by id
   Future<int> deleteItem(int id) {
     return database.deleteVaultItem(id);
   }
 
-  //we can search our item with keyword
+  // search item with keyword
   Future<List<VaultItem>> searchItems({
     required String userId,
     required String keyword,
@@ -76,11 +82,16 @@ class VaultRepository {
     return database.searchVaultItems(userId: userId, keyword: keyword);
   }
 
-  //can sort category likw password,note or...
+  // get item by category
   Future<List<VaultItem>> getItemsByCategory({
     required String userId,
-    required String category,
+    required RecordCategory category,
   }) {
-    return database.getVaultItemsByCategory(userId: userId, category: category);
+    return database.getVaultItemsByCategory(
+      userId: userId,
+
+      // sqlite still receives string value
+      category: category.dbValue,
+    );
   }
 }
